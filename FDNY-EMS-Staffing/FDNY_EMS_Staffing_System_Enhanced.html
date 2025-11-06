@@ -3160,16 +3160,16 @@
                     <h3 style="color: white; font-size: 1.5em; margin-bottom: 15px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🎉 Latest Enhancements - November 2025</h3>
                     <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; backdrop-filter: blur(10px);">
                         <ul style="line-height: 2; margin: 0; list-style: none; padding-left: 0;">
-                            <li><strong>✅ Auto-Sync Every 30 Seconds:</strong> Real-time collaboration with automatic change detection</li>
-                            <li><strong>✅ Change Notifications & Log:</strong> Popup alerts + permanent log in Exceptions tab</li>
-                            <li><strong>✅ Time Prompts for Mutual In/TCI:</strong> Automatic time entry with validation</li>
-                            <li><strong>✅ Multiple Shifts Support:</strong> Employees working 2 shifts appear twice in exports</li>
-                            <li><strong>✅ Seniority Sort:</strong> Order by Original Date of Appointment (ODA)</li>
-                            <li><strong>✅ Enhanced Overtime Calculation:</strong> Scans all data sources comprehensively</li>
-                            <li><strong>✅ Combined Leadership Column:</strong> Space-saving 3-column layout in exports</li>
-                            <li><strong>✅ Portrait-Optimized Printing:</strong> All exports fit letter paper perfectly</li>
-                            <li><strong>✅ Row Numbering:</strong> Automatic numbering restarts per tour group</li>
-                            <li><strong>✅ 20% Larger Export Fonts:</strong> Improved readability for printed reports</li>
+                            <li><strong>✅ Auto-Sync Every 30 Seconds:</strong> Real-time collaboration with automatic change detection - keeps all users synchronized</li>
+                            <li><strong>✅ Change Notifications & Log:</strong> Popup alerts + permanent log in Exceptions tab for full transparency</li>
+                            <li><strong>✅ Time Prompts for Mutual In/TCI:</strong> Automatic time entry with validation ensures accurate scheduling</li>
+                            <li><strong>✅ Multiple Shifts Support:</strong> Employees working 2+ shifts appear separately in exports with clear labels</li>
+                            <li><strong>✅ Seniority Sort:</strong> Order by Original Date of Appointment (ODA) for fair assignments</li>
+                            <li><strong>✅ Enhanced Overtime Calculation:</strong> Scans all data sources comprehensively - no OT missed</li>
+                            <li><strong>✅ Combined Leadership Column:</strong> Space-saving 3-column layout maximizes readability</li>
+                            <li><strong>✅ Portrait-Optimized Printing:</strong> All exports fit standard letter paper perfectly</li>
+                            <li><strong>✅ Row Numbering:</strong> Automatic numbering restarts per tour group for easy reference</li>
+                            <li><strong>✅ 20% Larger Export Fonts:</strong> Improved readability for printed reports and older eyes</li>
                         </ul>
                     </div>
                 </section>
@@ -3178,12 +3178,24 @@
                 <section style="margin-bottom: 30px;">
                     <h3 style="color: var(--dm-secondary-color); font-size: 1.4em; margin-bottom: 15px;">🚀 Quick Start</h3>
                     <ol style="line-height: 1.8; padding-left: 20px;">
-                        <li><strong>Login:</strong> Use admin account (username: <code>admin</code>, password: <code>1234567!</code>) or your last name & shield number</li>
-                        <li><strong>Load Employee Data:</strong> Pull roster from cloud OR upload CSV file via "⚙️ Admin" → "Data Management"</li>
-                        <li><strong>View Today's Schedule:</strong> The main roster shows employees scheduled to work based on platoon rotation</li>
-                        <li><strong>Mark Absences:</strong> Search for employees in the "Absent" panel and select a reason</li>
-                        <li><strong>Add Overtime:</strong> Search in "Added to Schedule" panel to add employees working overtime</li>
-                        <li><strong>Export Report:</strong> Click "Export HTML" to generate a printable daily rundown</li>
+                        <li><strong>Login:</strong> Use admin account (username: <code>admin</code>, password: <code>1234567!</code>) or your last name & shield number
+                            <br><em style="color: #666;">→ Only Captains, Chiefs, Supervisors, Instructors, Lieutenants, and Sergeants have login access</em>
+                        </li>
+                        <li><strong>Load Employee Data:</strong> Pull roster from cloud OR upload CSV file via "⚙️ Admin" → "Data Management"
+                            <br><em style="color: #666;">→ First time users: Upload your roster CSV or pull from cloud if already configured</em>
+                        </li>
+                        <li><strong>View Today's Schedule:</strong> The main roster shows employees scheduled to work based on platoon rotation
+                            <br><em style="color: #666;">→ Working platoons display automatically at the top</em>
+                        </li>
+                        <li><strong>Mark Absences:</strong> Search for employees in the "Absent" panel and select a reason
+                            <br><em style="color: #666;">→ Drag & drop from roster, or use search function</em>
+                        </li>
+                        <li><strong>Add Overtime:</strong> Search in "Added to Schedule" panel to add employees working overtime
+                            <br><em style="color: #666;">→ System prompts for start times when needed (Mutual In, TCI)</em>
+                        </li>
+                        <li><strong>Export Report:</strong> Click "Export HTML" to generate a printable daily rundown
+                            <br><em style="color: #666;">→ Choose from 4 layout options: Original, Compact, Print-Optimized, or Cards</em>
+                        </li>
                     </ol>
                 </section>
 
@@ -3214,10 +3226,13 @@
                             <li><strong>Add to Absent:</strong> Search employee name or drag from roster</li>
                             <li><strong>Select Reason:</strong> Choose from dropdown (SICK, ML, FMLA, etc.)</li>
                             <li><strong>🆕 Time-Based Reasons:</strong> When selecting "Mutual In", "MI", "TCI", or "Tour Change In", system prompts for:
-                                <br><em style="color: #666;">→ Start time in HH:MM format (24-hour)</em>
-                                <br><em style="color: #666;">→ Optional swap partner info (shield & name) for Mutual In</em>
+                                <br><em style="color: #666;">→ Start time in HH:MM format (24-hour, e.g., 07:00 or 19:00)</em>
+                                <br><em style="color: #666;">→ Optional swap partner info (shield & name) for Mutual In - helps track trades</em>
+                                <br><em style="color: #666;">→ Validation ensures correct format and reasonable times</em>
                             </li>
-                            <li><strong>Overtime Option:</strong> Click "OT" to log overtime details (hours, vice, reason)</li>
+                            <li><strong>Overtime Option:</strong> Click "OT" to log overtime details (hours, vice, reason)
+                                <br><em style="color: #666;">→ Comprehensive overtime tracking with multiple data points</em>
+                            </li>
                             <li><strong>Remove:</strong> Click the "✕" button to remove from absent list</li>
                         </ul>
                     </div>
@@ -3293,32 +3308,38 @@
                             <li><strong>Original Layout:</strong> Complete detailed rundown with all sections and statistics
                                 <br><em style="color: #666;">→ Portrait-optimized, includes highlighted employees (red=absent, green=added, orange=overtime)</em>
                                 <br><em style="color: #666;">→ Shows row numbering, 3-column grid (Leadership/Supervisors combined)</em>
-                                <br><em style="color: #666;">→ Enhanced overtime calculation from all sources</em>
+                                <br><em style="color: #666;">→ Enhanced overtime calculation from all sources (no OT missed)</em>
                                 <br><em style="color: #666;">→ Multiple shifts: Shows employees twice if working both regular shift + added shift</em>
+                                <br><em style="color: #666;">→ 20% larger fonts for better readability when printed</em>
                             </li>
                             <li><strong>Compact Layout:</strong> Condensed format grouped by tour and function
                                 <br><em style="color: #666;">→ Portrait print-friendly, shows availability percentage</em>
                                 <br><em style="color: #666;">→ Multiple shifts: Employees appear twice with "(2nd Shift)" label</em>
+                                <br><em style="color: #666;">→ Perfect for quick reference and mobile viewing</em>
                             </li>
                             <li><strong>Print-Optimized:</strong> Landscape (7 columns) or Portrait (6 columns) single-page format
                                 <br><em style="color: #666;">→ Filters out off-duty employees, shows only working staff</em>
                                 <br><em style="color: #666;">→ Multiple shifts: Displays "(2nd)" row with start time</em>
+                                <br><em style="color: #666;">→ Ideal for briefings and shift handovers</em>
                             </li>
-                            <li><strong>Cards Layout:</strong> Individual employee cards with full details</li>
+                            <li><strong>Cards Layout:</strong> Individual employee cards with full details
+                                <br><em style="color: #666;">→ Great for contact sheets and personnel tracking</em>
+                            </li>
                         </ul>
                         <p><strong>To Export:</strong></p>
                         <ol style="line-height: 1.8;">
                             <li>Select layout from dropdown next to "Export HTML" button</li>
-                            <li>Click "Export HTML"</li>
-                            <li>New window opens with formatted report (all exports portrait-optimized for printing)</li>
-                            <li>Use browser's Print function (Ctrl+P) or Save as PDF</li>
+                            <li>Click "Export HTML" - new window opens with formatted report</li>
+                            <li>All exports are portrait-optimized for standard letter paper (8.5" x 11")</li>
+                            <li>Use browser's Print function (Ctrl+P) or Save as PDF for distribution</li>
                         </ol>
                         <p style="background: #e8f4f8; padding: 10px; border-radius: 5px; margin: 10px 0 0 0;"><strong>🆕 Enhanced Features:</strong>
                             <br>• All exports show employees working multiple shifts with distinct labels
                             <br>• Comprehensive overtime tracking from all data sources
                             <br>• Combined Leadership/Supervisors column saves space
-                            <br>• Row numbering restarts for each tour group
-                            <br>• Portrait orientation fits standard letter paper</p>
+                            <br>• Row numbering restarts for each tour group for easy reference
+                            <br>• Portrait orientation fits standard letter paper perfectly
+                            <br>• 20% larger fonts improve readability for printed reports</p>
                     </div>
                 </section>
 
@@ -3463,30 +3484,60 @@
                     <h3 style="color: var(--dm-secondary-color); font-size: 1.4em; margin-bottom: 15px;">💡 Tips & Best Practices</h3>
                     <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
                         <ul style="line-height: 1.8; margin: 0;">
-                            <li><strong>First Time Setup:</strong> Login as admin → Pull roster from cloud OR upload CSV → Start using immediately</li>
-                            <li><strong>Daily Workflow:</strong> Login → Check working platoons → Mark absences → Add overtime → View statistics → Export report → Logout</li>
+                            <li><strong>First Time Setup:</strong> Login as admin → Pull roster from cloud OR upload CSV → Start using immediately
+                                <br><em style="color: #666;">→ CSV format: FIRST_NAME, LAST_NAME, FUNCTION, TOUR, PLATOON, START_TIME, SHIELD</em>
+                            </li>
+                            <li><strong>Daily Workflow:</strong> Login → Check working platoons → Mark absences → Add overtime → View statistics → Export report → Logout
+                                <br><em style="color: #666;">→ Typical workflow takes 2-5 minutes per day</em>
+                            </li>
                             <li><strong>🆕 Auto-Sync:</strong> System automatically refreshes every 30 seconds to catch changes from other users
-                                <br><em style="color: #666;">→ Watch for sync indicator in header</em>
-                                <br><em style="color: #666;">→ Check "Exceptions" tab for change log</em>
+                                <br><em style="color: #666;">→ Watch for animated sync indicator in header</em>
+                                <br><em style="color: #666;">→ Check "Exceptions" tab for detailed change log</em>
                                 <br><em style="color: #666;">→ Roster changes require manual push/pull for safety</em>
+                                <br><em style="color: #666;">→ Schedule data (absences, added employees) syncs automatically</em>
                             </li>
                             <li><strong>🆕 Time-Based Entries:</strong> When adding Mutual In or TCI, always enter accurate start times
-                                <br><em style="color: #666;">→ Use 24-hour format (HH:MM)</em>
-                                <br><em style="color: #666;">→ For Mutual In: Add swap partner info for tracking</em>
+                                <br><em style="color: #666;">→ Use 24-hour format (HH:MM): 07:00, 15:00, 19:00, 23:00</em>
+                                <br><em style="color: #666;">→ For Mutual In: Add swap partner info for tracking purposes</em>
+                                <br><em style="color: #666;">→ System validates times and prevents invalid entries</em>
                             </li>
                             <li><strong>🆕 Multiple Shifts:</strong> If employee works both regular shift + added shift, they appear twice in exports
                                 <br><em style="color: #666;">→ First row: Regular scheduled shift</em>
                                 <br><em style="color: #666;">→ Second row: Labeled "(2nd Shift)" or "(2nd)"</em>
+                                <br><em style="color: #666;">→ Each shift counted separately in statistics</em>
                             </li>
-                            <li><strong>🆕 Seniority View:</strong> Use "Sort by Seniority" for ODA-based ordering when making assignments</li>
-                            <li><strong>🆕 Print Exports:</strong> All export formats now portrait-optimized for standard letter paper</li>
-                            <li><strong>Data Persistence:</strong> All changes save automatically to browser storage AND cloud (for schedule data)</li>
-                            <li><strong>Schedule in Advance:</strong> Use Schedule View to mark known absences for future dates</li>
-                            <li><strong>Overtime Tracking:</strong> Always use the OT button to log complete overtime details</li>
-                            <li><strong>Statistics Review:</strong> Check leave usage statistics weekly/monthly to identify trends</li>
-                            <li><strong>Regular Backups:</strong> Export Excel regularly to backup your roster data locally</li>
-                            <li><strong>Cross-Station Access:</strong> Use cloud sync to access data from any station or device</li>
-                            <li><strong>Change Notifications:</strong> Dismiss or click to see details when other users make changes</li>
+                            <li><strong>🆕 Seniority View:</strong> Use "Sort by Seniority" for ODA-based ordering when making assignments
+                                <br><em style="color: #666;">→ Sort persists through filter changes</em>
+                                <br><em style="color: #666;">→ Gold banner shows when seniority sort is active</em>
+                            </li>
+                            <li><strong>🆕 Print Exports:</strong> All export formats now portrait-optimized for standard letter paper
+                                <br><em style="color: #666;">→ No more landscape printing issues</em>
+                                <br><em style="color: #666;">→ Fonts 20% larger for better readability</em>
+                            </li>
+                            <li><strong>Data Persistence:</strong> All changes save automatically to browser storage AND cloud (for schedule data)
+                                <br><em style="color: #666;">→ Local storage keeps data even when offline</em>
+                                <br><em style="color: #666;">→ Cloud sync ensures all users see same information</em>
+                            </li>
+                            <li><strong>Schedule in Advance:</strong> Use Schedule View to mark known absences for future dates
+                                <br><em style="color: #666;">→ Plan vacations, medical leave, training days ahead of time</em>
+                            </li>
+                            <li><strong>Overtime Tracking:</strong> Always use the OT button to log complete overtime details
+                                <br><em style="color: #666;">→ Captures hours, vice shield, reason for accurate records</em>
+                            </li>
+                            <li><strong>Statistics Review:</strong> Check leave usage statistics weekly/monthly to identify trends
+                                <br><em style="color: #666;">→ Filter by time periods: 7, 30, 90 days, or 1 year</em>
+                                <br><em style="color: #666;">→ Color-coded alerts for high usage patterns</em>
+                            </li>
+                            <li><strong>Regular Backups:</strong> Export Excel regularly to backup your roster data locally
+                                <br><em style="color: #666;">→ Recommended: Weekly backups to external storage</em>
+                            </li>
+                            <li><strong>Cross-Station Access:</strong> Use cloud sync to access data from any station or device
+                                <br><em style="color: #666;">→ Login from home, headquarters, or field locations</em>
+                            </li>
+                            <li><strong>Change Notifications:</strong> Dismiss or click to see details when other users make changes
+                                <br><em style="color: #666;">→ Notifications auto-dismiss after 15 seconds</em>
+                                <br><em style="color: #666;">→ Permanent log available in Exceptions tab</em>
+                            </li>
                         </ul>
                     </div>
                 </section>
@@ -3500,6 +3551,46 @@
                             <li><strong>Esc:</strong> Close any open modal</li>
                             <li><strong>Tab:</strong> Navigate between form fields</li>
                             <li><strong>Enter:</strong> Submit forms (Add Member, Add Reason, etc.)</li>
+                            <li><strong>Ctrl + F:</strong> Search within exported reports</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Troubleshooting -->
+                <section style="margin-bottom: 30px;">
+                    <h3 style="color: var(--dm-secondary-color); font-size: 1.4em; margin-bottom: 15px;">🔧 Troubleshooting</h3>
+                    <div style="background: var(--dm-panel-bg); padding: 15px; border-radius: 8px;">
+                        <ul style="line-height: 1.8; margin: 0;">
+                            <li><strong>Data not syncing?</strong>
+                                <br><em style="color: #666;">→ Check sync indicator in header - should show "Synced" or animating</em>
+                                <br><em style="color: #666;">→ Verify you're logged in with Captain/Chief/Admin account</em>
+                                <br><em style="color: #666;">→ Check internet connection - cloud sync requires connectivity</em>
+                            </li>
+                            <li><strong>Employees not showing?</strong>
+                                <br><em style="color: #666;">→ Clear all filters using "Clear All Filters" button</em>
+                                <br><em style="color: #666;">→ Toggle "Working Today" filter off to see all employees</em>
+                                <br><em style="color: #666;">→ Check if "Hide Inactive" is enabled</em>
+                            </li>
+                            <li><strong>Export looks wrong?</strong>
+                                <br><em style="color: #666;">→ Try different export layout (Original, Compact, Print-Optimized)</em>
+                                <br><em style="color: #666;">→ Use browser Print Preview (Ctrl+P) to check before printing</em>
+                                <br><em style="color: #666;">→ Ensure paper size set to Letter (8.5" x 11") in print settings</em>
+                            </li>
+                            <li><strong>Login not working?</strong>
+                                <br><em style="color: #666;">→ Verify you have authorized rank (Captain, Chief, Supervisor, Instructor, Lieutenant, Sergeant)</em>
+                                <br><em style="color: #666;">→ Check username is lowercase last name, password is shield number</em>
+                                <br><em style="color: #666;">→ Admin account: username "admin", password "1234567!"</em>
+                            </li>
+                            <li><strong>Changes not saving?</strong>
+                                <br><em style="color: #666;">→ Check browser console for errors (F12)</em>
+                                <br><em style="color: #666;">→ Clear browser cache and reload page</em>
+                                <br><em style="color: #666;">→ Ensure local storage not disabled in browser settings</em>
+                            </li>
+                            <li><strong>Statistics showing zeros?</strong>
+                                <br><em style="color: #666;">→ Ensure employee data loaded (check roster count)</em>
+                                <br><em style="color: #666;">→ Verify date selected has working platoons</em>
+                                <br><em style="color: #666;">→ Use "🔄 Reload Data" button in Admin settings</em>
+                            </li>
                         </ul>
                     </div>
                 </section>
@@ -3511,9 +3602,22 @@
                         <p style="margin: 0; line-height: 1.8;">
                             <strong>For technical support or questions:</strong><br>
                             • Check this guide for common features and workflows<br>
-                            • All data is stored locally in your browser<br>
-                            • Use Export Excel to backup your roster regularly<br>
-                            • Click the help button (?) anytime to view this guide
+                            • Review the Troubleshooting section above for common issues<br>
+                            • All data is stored locally in your browser + cloud for schedule data<br>
+                            • Use Export Excel to backup your roster regularly (recommended weekly)<br>
+                            • Click the help button (?) anytime to view this guide<br>
+                            • Press F12 to open browser console for technical diagnostics<br>
+                            <br>
+                            <strong>System Features:</strong><br>
+                            • Auto-sync every 30 seconds for real-time collaboration<br>
+                            • Change notifications and permanent log in Exceptions tab<br>
+                            • Portrait-optimized exports for all layouts<br>
+                            • Comprehensive overtime tracking from all sources<br>
+                            • Multiple shift support with clear labeling<br>
+                            • Seniority sorting by Original Date of Appointment (ODA)<br>
+                            <br>
+                            <strong>Version:</strong> November 2025 Enhanced Edition<br>
+                            <strong>Last Updated:</strong> November 6, 2025
                         </p>
                     </div>
                 </section>
