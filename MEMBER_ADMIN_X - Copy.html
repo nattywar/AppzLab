@@ -1,0 +1,3843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>EMS Member Admin & Onboarding</title>
+    
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+
+    
+    <!-- SheetJS Library for CSV Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        /* =====================================================
+           MOBILE-FIRST MEMBER ADMIN & ONBOARDING APP
+           - Complete member management with cloud sync
+           - CSV import/export functionality
+           - Real-time Supabase integration
+           - Mobile-optimized interface with auto-hide features
+           ===================================================== */
+
+        :root {
+            --primary-color: #C8102E;
+            --secondary-color: #003478;
+            --fdny-gold: #FFB81C;
+            --success-color: #2e7d32;
+            --danger-color: #C8102E;
+            --warning-color: #FFB81C;
+            --info-color: #003478;
+            --light-gray: #f5f5f5;
+            --medium-gray: #e0e0e0;
+            --dark-gray: #424242;
+            --border-color: #d4d4d4;
+            --panel-bg: #ffffff;
+            --body-bg: #f5f7fa;
+            --text-color: #1a1a1a;
+            --heading-color: #003478;
+            --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        }
+
+        body.dark-mode {
+            --primary-color: #D63447;
+            --secondary-color: #5B8DB8;
+            --fdny-gold: #E6C845;
+            --success-color: #4caf50;
+            --danger-color: #D63447;
+            --warning-color: #E6C845;
+            --info-color: #6A9FCF;
+            --light-gray: #2c2c2c;
+            --medium-gray: #3c3c3c;
+            --dark-gray: #a0a0a0;
+            --border-color: #4c4c4c;
+            --panel-bg: #252525;
+            --body-bg: #1a1a1a;
+            --text-color: #d0d0d0;
+            --heading-color: #f0f0f0;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, "Roboto", sans-serif;
+            background-color: var(--body-bg);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            font-size: 16px;
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: rgba(0,0,0,0);
+            /* MOBILE OPTIMIZATIONS */
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            touch-action: manipulation;
+            /* Prevent zoom on double tap */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        /* Allow text selection for specific elements */
+        input, textarea, .selectable {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+
+        /* Header */
+        #header {
+            background: linear-gradient(135deg, rgba(0, 52, 120, 0.85), rgba(200, 16, 46, 0.85));
+            color: #fff;
+            padding: calc(env(safe-area-inset-top, 0px) + 14px) 14px 14px;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.18);
+            border-radius: 22px;
+            position: sticky;
+            top: calc(env(safe-area-inset-top, 0px) + 12px);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: all 0.3s ease;
+            margin: 0 12px;
+            margin-top: calc(env(safe-area-inset-top, 0px) + 12px);
+        }
+        
+        /* Collapsed header - show only clock and toggle */
+        #header.collapsed {
+            padding: 4px 12px;
+            min-height: 36px;
+        }
+        
+        #header.collapsed #app-title,
+        #header.collapsed #sync-status-bar,
+        #header.collapsed #privacy-controls {
+            display: none !important;
+        }
+        
+        #privacy-controls {
+            display: flex;
+        }
+        
+        #header-collapsed-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            width: 100%;
+        }
+
+        /* Hide collapsed elements when expanded, show when collapsed */
+        #header:not(.collapsed) #clock-collapsed {
+            display: none;
+        }
+        
+        #header-toggle-btn {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 4px 8px;
+            border-radius: 6px;
+            line-height: 1;
+            transition: all 0.3s ease;
+            min-width: 32px;
+            min-height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        #header-toggle-btn:hover,
+        #header-toggle-btn:active {
+            background-color: #a00d27;
+            transform: scale(0.95);
+        }
+        
+        #header.collapsed #header-toggle-btn {
+            transform: rotate(180deg);
+        }
+
+        #app-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.35);
+            text-align: center;
+            line-height: 1.2;
+            margin: 0;
+            color: #fff;
+        }
+        
+        @media (max-width: 640px) {
+            #app-title {
+                font-size: 1.4em;
+            }
+        }
+
+        #sync-status-bar {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            align-items: center;
+            padding: 10px 12px;
+            background: rgba(0,0,0,0.25);
+            color: #fff;
+            border-radius: 14px;
+            backdrop-filter: blur(6px);
+            gap: 8px;
+        }
+        
+        #clock-collapsed {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #fff;
+            flex: 1;
+            text-align: center;
+            line-height: 1.2;
+        }
+        
+        @media (max-width: 640px) {
+            #sync-status-bar {
+                grid-template-columns: 1fr;
+                gap: 8px;
+                text-align: center;
+            }
+        }
+
+        .sync-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+            padding: 6px 10px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            backdrop-filter: blur(4px);
+        }
+
+        .sync-indicator.online {
+            background: rgba(46, 125, 50, 0.3);
+            color: #a5d6a7;
+        }
+
+        .sync-indicator.offline {
+            background: rgba(198, 40, 40, 0.3);
+            color: #ef9a9a;
+        }
+
+        .sync-indicator.syncing {
+            background: rgba(245, 127, 23, 0.3);
+            color: #ffcc02;
+        }
+
+        .sync-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Main Container */
+        #main-container {
+            padding: 20px 16px calc(env(safe-area-inset-bottom, 0px) + 100px);
+            max-width: 100%;
+            margin: 0 auto;
+            /* Mobile-first: No horizontal constraints */
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        /* Action Bar */
+        .action-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        /* Mobile Action Bar - Fixed bottom navigation */
+        #mobile-action-bar {
+            position: fixed;
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(100%, 400px);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding: 12px 16px;
+            border-radius: 24px;
+            background: rgba(14, 22, 34, 0.92);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            z-index: 400;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+
+        /* Auto-hide states for mobile action bar */
+        #mobile-action-bar.hidden {
+            transform: translateX(-50%) translateY(100px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #mobile-action-bar.visible {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Show bar indicator when hidden */
+        #mobile-bar-indicator {
+            position: fixed;
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: rgba(200, 16, 46, 0.8);
+            border-radius: 2px;
+            z-index: 450;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            pointer-events: none;
+        }
+
+        #mobile-bar-indicator.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .mobile-action-btn {
+            border: none;
+            border-radius: 16px;
+            padding: 10px 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(255,255,255,0.12);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: #fff;
+            min-height: 66px;
+            box-shadow: none;
+            cursor: pointer;
+            transition: transform 0.18s ease, background 0.18s ease;
+        }
+        
+        .mobile-action-btn span {
+            font-size: 1.3rem;
+        }
+        
+        .mobile-action-btn:active,
+        .mobile-action-btn:hover {
+            transform: translateY(1px) scale(0.98);
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .mobile-action-btn.active {
+            background: rgba(200, 16, 46, 0.4);
+            box-shadow: 0 10px 20px rgba(200,16,46,0.35);
+        }
+
+        .btn {
+            padding: 16px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            min-height: 56px;
+            width: 100%;
+            /* Mobile touch optimization */
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            /* Ensure proper text alignment */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: var(--text-color);
+        }
+
+        .btn-info {
+            background-color: var(--info-color);
+            color: white;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Search and Filter Bar */
+        .search-filter-bar {
+            background: var(--panel-bg);
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 16px;
+            border: 2px solid var(--border-color);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px;
+            font-size: 1em;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--light-gray);
+            color: var(--text-color);
+            margin-bottom: 12px;
+            box-sizing: border-box;
+            /* Mobile input optimizations */
+            -webkit-appearance: none;
+            appearance: none;
+            touch-action: manipulation;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .filter-chip {
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            background: var(--light-gray);
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            /* Mobile touch optimization */
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .filter-chip.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* Special styling for Special Status filter */
+        .filter-chip[data-filter="special"] {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            border-color: #ff6b6b;
+            font-weight: 600;
+        }
+
+        .filter-chip[data-filter="special"]:hover {
+            background: linear-gradient(135deg, #ff5252, #e53e3e);
+            transform: translateY(-1px);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+        }
+
+        .stat-card {
+            background: var(--panel-bg);
+            padding: 16px;
+            border-radius: 12px;
+            border: 2px solid var(--border-color);
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 1em;
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        /* Member List */
+        .member-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        
+        @media (min-width: 768px) {
+            .member-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (min-width: 1200px) {
+            .member-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .member-card {
+            background: var(--panel-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: var(--box-shadow);
+            transition: all 0.2s ease;
+            position: relative;
+            width: 100%;
+            box-sizing: border-box;
+            /* Prevent content overflow */
+            overflow: hidden;
+        }
+
+        .member-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transform: translateY(-2px);
+        }
+
+        .member-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .member-name {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--heading-color);
+            margin-bottom: 5px;
+        }
+
+        .member-id {
+            font-size: 0.9em;
+            color: var(--dark-gray);
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-inactive {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .status-special {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        /* Special Status Filter Chips */
+        .status-filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .status-filter-chip {
+            background: var(--panel-bg);
+            color: var(--secondary-color);
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+
+        .status-filter-chip:hover {
+            border-color: var(--primary-color);
+            background: var(--light-gray);
+        }
+
+        .status-filter-chip.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* File Type Selection Buttons */
+        .file-type-btn {
+            border: none;
+            outline: none;
+        }
+
+        .file-type-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .file-type-btn.active[data-type="csv"] {
+            background: #4caf50 !important;
+            color: white !important;
+            border-color: #4caf50 !important;
+        }
+
+        .file-type-btn:not(.active)[data-type="csv"] {
+            background: var(--panel-bg) !important;
+            color: var(--secondary-color) !important;
+            border-color: #4caf50 !important;
+        }
+
+        .file-type-btn.active[data-type="excel"] {
+            background: #007acc !important;
+            color: white !important;
+            border-color: #007acc !important;
+        }
+
+        .file-type-btn:not(.active)[data-type="excel"] {
+            background: var(--panel-bg) !important;
+            color: var(--secondary-color) !important;
+            border-color: #007acc !important;
+        }
+
+        .member-info {
+            margin: 12px 0;
+            line-height: 1.6;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border-color);
+            /* Mobile: Allow wrapping for long content */
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        .info-value {
+            color: var(--text-color);
+        }
+
+        /* Phone Call Icon Styling */
+        .phone-call-icon {
+            color: #4CAF50 !important;
+            margin-left: 8px;
+            text-decoration: none !important;
+            font-size: 1.1em;
+            display: inline-flex;
+            align-items: center;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .phone-call-icon:hover {
+            background: rgba(76, 175, 80, 0.2) !important;
+            transform: scale(1.1);
+            color: #388E3C !important;
+        }
+
+        .phone-call-icon:active {
+            transform: scale(0.95);
+        }
+
+        /* DOB Privacy Feature */
+        .dob-hidden .dob-info {
+            display: none;
+        }
+
+        .dob-protected {
+            color: #888;
+            font-style: italic;
+            font-size: 0.9em;
+        }
+
+        /* Toast Notifications - Compact Size */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            border-radius: 6px;
+            font-size: 13px;
+            z-index: 10000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            white-space: nowrap;
+            max-width: fit-content;
+            min-width: auto;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast.success {
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .toast.error {
+            border-left: 4px solid #f44336;
+        }
+        
+        .toast.info {
+            border-left: 4px solid #2196F3;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            width: 300px;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            border-radius: 8px;
+            padding: 12px;
+            z-index: 10000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            display: none;
+        }
+
+        .progress-container.show {
+            transform: translateX(0);
+            display: block;
+        }
+
+        .progress-text {
+            font-size: 13px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #81c784);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.2s ease;
+        }
+
+        .member-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .member-actions .btn {
+            min-height: 48px;
+            font-size: 0.9em;
+            padding: 12px 8px;
+            /* Ensure touch targets are adequate */
+            min-width: 48px;
+        }
+
+        /* Special Status Members - Compact One-Line Layout */
+        .member-card.special-status {
+            padding: 12px 16px;
+            min-height: auto;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .member-card.special-status:hover {
+            background: var(--light-gray);
+        }
+
+        .member-card.special-status .member-header {
+            margin-bottom: 0;
+            align-items: center;
+            position: relative;
+        }
+
+        .member-card.special-status .member-header::after {
+            content: '▼';
+            position: absolute;
+            right: 0;
+            color: var(--secondary-color);
+            transition: transform 0.3s ease;
+        }
+
+        .member-card.special-status.expanded .member-header::after {
+            transform: rotate(180deg);
+        }
+
+        .member-card.special-status .member-info {
+            display: none; /* Hidden by default */
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .member-card.special-status.expanded .member-info {
+            display: block; /* Show when expanded */
+        }
+
+        .member-card.special-status .member-actions {
+            margin-top: 0;
+            gap: 8px;
+        }
+
+        .member-card.special-status.expanded .member-actions {
+            margin-top: 12px;
+        }
+
+        .member-card.special-status .member-name {
+            font-size: 1.1em;
+            margin-bottom: 0;
+        }
+
+        .member-card.special-status .member-id {
+            font-size: 0.85em;
+            margin-top: 2px;
+        }
+
+
+
+        /* Back to Top Button - Match Mobile Staff App */
+        #scroll-to-top {
+            position: fixed !important;
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 110px) !important;
+            right: 30px !important;
+            width: auto !important;
+            height: auto !important;
+            background: transparent !important;
+            color: var(--primary-color) !important;
+            border: none !important;
+            border-radius: 0 !important;
+            font-size: 42px !important;
+            cursor: pointer !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            transition: opacity 0.3s, visibility 0.3s, color 0.2s, transform 0.2s;
+            z-index: 9999 !important;
+            box-shadow: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important;
+            line-height: 1 !important;
+            touch-action: manipulation;
+        }
+
+        #scroll-to-top.show {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        #scroll-to-top:hover {
+            color: #8f0a1f !important;
+            transform: translateY(-4px);
+        }
+        
+        @media (min-width: 1024px) {
+            #scroll-to-top {
+                bottom: 25px !important;
+            }
+        }
+
+
+
+        #scroll-to-top.show {
+            display: flex;
+        }
+
+        #scroll-to-top:hover {
+            background: #a00d27;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.5);
+        }
+
+        #scroll-to-top:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.7);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--panel-bg);
+            margin: 16px;
+            padding: 20px;
+            border: 2px solid var(--border-color);
+            width: calc(100% - 32px);
+            max-width: 500px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            max-height: 90vh;
+            overflow-y: auto;
+            box-sizing: border-box;
+            /* Mobile modal optimizations */
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        @media (max-width: 480px) {
+            .modal-content {
+                margin: 12px;
+                padding: 16px;
+                width: calc(100% - 24px);
+                max-height: 95vh;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--primary-color);
+        }
+
+        .modal-title {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: var(--heading-color);
+            margin: 0;
+        }
+
+        .close-btn {
+            font-size: 40px;
+            font-weight: bold;
+            color: var(--secondary-color);
+            cursor: pointer;
+            line-height: 1;
+            padding: 5px 10px;
+        }
+
+        .close-btn:hover {
+            color: var(--primary-color);
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 16px;
+            font-size: 1em;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--light-gray);
+            color: var(--text-color);
+            min-height: 52px;
+            box-sizing: border-box;
+            /* Mobile input optimizations */
+            -webkit-appearance: none;
+            appearance: none;
+            touch-action: manipulation;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.2);
+        }
+
+        textarea.form-input {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-checkbox {
+            width: 28px;
+            height: 28px;
+            margin-right: 10px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: var(--light-gray);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            cursor: pointer;
+            font-size: 1.1em;
+        }
+
+        /* Dark Mode Toggle */
+        .dark-mode-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 32px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255,255,255,0.3);
+            transition: .4s;
+            border-radius: 32px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 24px;
+            width: 24px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(28px);
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 4px solid var(--light-gray);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 16px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 3000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast-success {
+            background-color: var(--success-color);
+        }
+
+        .toast-error {
+            background-color: var(--danger-color);
+        }
+
+        .toast-info {
+            background-color: var(--info-color);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--dark-gray);
+            background: var(--panel-bg);
+            border-radius: 12px;
+            border: 2px dashed var(--border-color);
+            margin: 20px 0;
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-text {
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+
+        /* Mobile-specific adjustments */
+        @media (max-width: 640px) {
+            #main-container {
+                padding: 12px 12px calc(env(safe-area-inset-bottom, 0px) + 100px);
+            }
+            
+            #header {
+                padding: calc(env(safe-area-inset-top, 0px) + 12px) 12px 12px;
+                margin: 0 8px;
+                margin-top: calc(env(safe-area-inset-top, 0px) + 8px);
+                border-radius: 18px;
+            }
+            
+            #header.collapsed {
+                padding: 3px 10px;
+                min-height: 30px;
+            }
+            
+            #header.collapsed #header-toggle-btn {
+                min-width: 28px;
+                min-height: 28px;
+                font-size: 1em;
+                padding: 3px 6px;
+            }
+            
+            #header.collapsed #clock-collapsed {
+                font-size: 0.85em;
+            }
+            
+            .action-bar {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .search-filter-bar {
+                padding: 12px;
+                margin-bottom: 12px;
+            }
+            
+            .member-card {
+                padding: 12px;
+            }
+            
+            .member-name {
+                font-size: 1.2em;
+            }
+            
+            .stat-card {
+                padding: 12px;
+                min-height: 70px;
+            }
+            
+            .stat-value {
+                font-size: 2em;
+            }
+            
+            .stat-label {
+                font-size: 0.9em;
+            }
+            
+            /* Stack filter controls vertically on small screens */
+            .search-filter-bar > div[style*="display: flex"] {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 12px;
+            }
+            
+            .search-filter-bar select {
+                max-width: none !important;
+            }
+            
+            .search-filter-bar label {
+                margin-left: 0 !important;
+            }
+            
+            #mobile-action-bar {
+                width: calc(100% - 24px);
+                padding: 10px 12px;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px;
+            }
+            
+            .mobile-action-btn {
+                min-height: 60px;
+                font-size: 0.7rem;
+                padding: 8px 6px;
+            }
+
+            #mobile-bar-indicator {
+                width: 80px;
+                height: 5px;
+                bottom: calc(env(safe-area-inset-bottom, 0px) + 6px);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .member-actions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .filter-group {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .filter-chip {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        
+        /* Tablet adjustments */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            .action-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .member-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        /* Desktop adjustments */
+        @media (min-width: 1024px) {
+            #main-container {
+                max-width: 1200px;
+                padding: 24px 24px calc(env(safe-area-inset-bottom, 0px) + 100px);
+            }
+            
+            .action-bar {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .member-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            #mobile-action-bar {
+                display: none; /* Hide mobile bar on desktop */
+            }
+        }
+
+
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div id="header">
+        <div id="header-collapsed-bar">
+            <div id="clock-collapsed"></div>
+            <button id="header-toggle-btn" aria-label="Toggle header">▼</button>
+        </div>
+        
+        <h1 id="app-title">🚑 EMS Member Admin</h1>
+        
+        <!-- Station Name Display -->
+        <div id="station-display" style="text-align: center; font-size: 1em; font-weight: 600; color: #fff; padding: 6px 12px; background: rgba(255,255,255,0.15); border-radius: 8px; backdrop-filter: blur(4px);">
+            📍 Station: <span id="current-station-name">All Stations</span>
+        </div>
+        
+        <div id="sync-status-bar">
+            <div class="sync-indicator offline" id="sync-indicator">
+                <span class="sync-dot"></span>
+                <span id="sync-text">Offline</span>
+            </div>
+            
+            <button class="btn btn-primary" id="sync-now-btn" style="flex: 0; min-width: auto; padding: 8px 12px; font-size: 0.9em;">
+                🔄 Sync Now
+            </button>
+            
+            <div class="dark-mode-toggle">
+                <span style="font-weight: 600; color: #fff;">Dark Mode</span>
+                <label class="switch">
+                    <input type="checkbox" id="dark-mode-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div id="privacy-controls" style="align-items: center; gap: 10px; padding: 8px 12px; background: rgba(255,255,255,0.1); border-radius: 8px; margin-top: 10px;">
+            <label style="font-weight: 600; color: #fff; font-size: 0.9em;">🔐 Privacy Code:</label>
+            <input type="password" id="privacy-code-input" placeholder="Enter code to show DOB" style="
+                padding: 6px 10px;
+                border: 2px solid rgba(255,255,255,0.3);
+                border-radius: 6px;
+                background: rgba(255,255,255,0.9);
+                color: #333;
+                font-size: 0.9em;
+                width: 150px;
+                box-sizing: border-box;
+            ">
+            <button id="privacy-code-btn" style="
+                padding: 6px 12px;
+                background: rgba(255,255,255,0.2);
+                border: 2px solid rgba(255,255,255,0.3);
+                color: #fff;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 0.9em;
+                transition: all 0.2s ease;
+            ">Unlock</button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div id="main-container">
+        <!-- Action Bar -->
+        <div class="action-bar">
+            <button class="btn btn-primary" id="add-member-btn">➕ Add New Member</button>
+            <button class="btn btn-success" id="import-csv-btn">📥 Import File</button>
+            <button class="btn btn-info" id="export-csv-btn">📤 Export CSV</button>
+
+            <button class="btn btn-secondary" id="onboarding-btn">🎓 Onboarding Wizard</button>
+            <button class="btn" id="push-to-cloud-btn" style="background: #28a745; color: white;">☁️ Push to Cloud</button>
+            <button class="btn" id="remove-duplicates-btn" style="background: #ffc107; color: #000;">🧹 Remove Duplicates</button>
+            <button class="btn" id="clear-data-btn" style="background: #dc3545; color: white;">🗑️ Clear Local Data</button>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Members</div>
+                <div class="stat-value" id="stat-total">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Active Members</div>
+                <div class="stat-value" id="stat-active">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Inactive Members</div>
+                <div class="stat-value" id="stat-inactive">0</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: white;">
+                <div class="stat-label">Special Status</div>
+                <div class="stat-value" id="stat-special">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Last Synced</div>
+                <div class="stat-value" style="font-size: 1.2em;" id="stat-sync">Never</div>
+            </div>
+        </div>
+
+        <!-- Search and Filter Bar -->
+        <div class="search-filter-bar">
+            <input type="text" class="search-input" id="search-input" placeholder="🔍 Search by name, shield, function, platoon, station, unit...">
+            
+            <div style="display: flex; gap: 10px; align-items: center; margin: 10px 0;">
+                <label for="station-select" style="font-weight: 600; color: var(--primary-color);">📍 Station:</label>
+                <select id="station-select" class="form-select" style="flex: 1; max-width: 300px; padding: 12px; font-size: 1em;">
+                    <option value="">All Stations</option>
+                </select>
+                
+                <label for="unit-select" style="font-weight: 600; color: var(--primary-color); margin-left: 15px;">🚑 Unit:</label>
+                <select id="unit-select" class="form-select" style="flex: 1; max-width: 300px; padding: 12px; font-size: 1em;">
+                    <option value="">All Units</option>
+                </select>
+                
+                <label for="function-select" style="font-weight: 600; color: var(--primary-color); margin-left: 15px;">👤 Function:</label>
+                <select id="function-select" class="form-select" style="flex: 1; max-width: 300px; padding: 12px; font-size: 1em;">
+                    <option value="">All Functions</option>
+                </select>
+            </div>
+            
+            <div class="filter-group" id="filter-group">
+                <div class="filter-chip active" data-filter="all">All</div>
+                <div class="filter-chip" data-filter="active">Active Only</div>
+                <div class="filter-chip" data-filter="special">Special Status</div>
+                <div class="filter-chip" data-filter="inactive">Inactive Only</div>
+            </div>
+            
+            <div class="special-status-filters" style="margin-top: 10px;">
+                <div style="font-weight: 600; margin-bottom: 8px; color: var(--secondary-color);">Special Status Filters:</div>
+                <div class="status-filter-group" id="dynamic-status-filters">
+                    <!-- Dynamic status filters will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Member Grid -->
+        <div class="member-grid" id="member-grid">
+            <!-- Member cards will be inserted here -->
+            <div class="empty-state">
+                <div class="empty-state-icon">📋</div>
+                <div class="empty-state-text">No members found</div>
+                <p>Add a new member or sync from cloud</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Action Bar -->
+    <nav id="mobile-action-bar" aria-label="Primary actions">
+        <button type="button" class="mobile-action-btn" data-action="add">
+            <span>➕</span>
+            Add
+        </button>
+        <button type="button" class="mobile-action-btn" data-action="sync">
+            <span>🔄</span>
+            Sync
+        </button>
+        <button type="button" class="mobile-action-btn" data-action="export">
+            <span>📤</span>
+            Export
+        </button>
+        <button type="button" class="mobile-action-btn" data-action="more">
+            <span>⋯</span>
+            More
+        </button>
+    </nav>
+    
+    <!-- Mobile bar indicator - shows when bar is hidden -->
+    <div id="mobile-bar-indicator" title="Tap to show navigation bar"></div>
+
+    <!-- Add/Edit Member Modal -->
+    <div id="member-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-title">Add New Member</h2>
+                <span class="close-btn" id="close-member-modal">&times;</span>
+            </div>
+            
+            <form id="member-form">
+                <input type="hidden" id="member-id">
+                
+                <div class="form-group">
+                    <label class="form-label">First Name *</label>
+                    <input type="text" class="form-input" id="first-name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Last Name *</label>
+                    <input type="text" class="form-input" id="last-name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Shield Number *</label>
+                    <input type="text" class="form-input" id="shield-number" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Date of Birth (DOB)</label>
+                    <input type="date" class="form-input" id="dob">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Function *</label>
+                    <input type="text" class="form-input" id="function" list="function-list" placeholder="Type or select function" required>
+                    <datalist id="function-list">
+                        <option value="CHIEF">
+                        <option value="CAPTAIN">
+                        <option value="LIEUTENANT">
+                        <option value="SGT">
+                        <option value="SUPERVISOR">
+                        <option value="RD">
+                        <option value="ARD">
+                        <option value="RELAY">
+                        <option value="DD">
+                        <option value="INSTRUCTOR">
+                        <option value="CADO-GIS">
+                        <option value="EMT">
+                        <option value="Paramedic">
+                        <option value="Firefighter">
+                        <option value="Chauffeur">
+                    </datalist>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Tour</label>
+                    <input type="text" class="form-input" id="tour" placeholder="e.g., Day, Night">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Platoon</label>
+                    <input type="text" class="form-input" id="platoon" list="platoon-list" placeholder="Type or select platoon">
+                    <datalist id="platoon-list">
+                        <option value="A">
+                        <option value="B">
+                        <option value="C">
+                        <option value="D">
+                        <option value="Day">
+                    </datalist>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Start Time</label>
+                    <input type="text" class="form-input" id="start-time" placeholder="e.g., 0800, 08:00">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Station *</label>
+                    <input type="text" class="form-input" id="station" placeholder="e.g., Station 1" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Unit</label>
+                    <input type="text" class="form-input" id="unit" placeholder="e.g., Ambulance 101, Engine 1">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Vax # (Vaccination Number)</label>
+                    <input type="text" class="form-input" id="vax-number" placeholder="Vaccination number">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Status *</label>
+                    <input type="text" class="form-input" id="status" list="status-list" placeholder="Type or select status (or enter custom)" required value="ACTIVE">
+                    <datalist id="status-list">
+                        <!-- Dynamic status options will be populated here -->
+                    </datalist>
+                </div>
+                
+                <!-- Show More Fields Button -->
+                <div class="form-group" style="text-align: center; margin: 20px 0;">
+                    <button type="button" class="btn btn-secondary" id="toggle-extra-fields" onclick="toggleExtraFields()" style="width: 100%;">
+                        <span id="toggle-icon">▼</span> Show More Fields
+                    </button>
+                </div>
+                
+                <!-- Collapsible Extra Fields Section -->
+                <div id="extra-fields-section" style="display: none;">
+                    <div style="border-top: 2px solid var(--border-color); padding-top: 15px; margin-top: 10px;">
+                        <h3 style="color: var(--secondary-color); margin-bottom: 15px; font-size: 16px;">Additional Information</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-input" id="email" placeholder="employee@fdny.nyc.gov">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Phone</label>
+                            <input type="tel" class="form-input" id="phone" placeholder="(555) 123-4567">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">ODA (Original Date of Appointment)</label>
+                            <input type="date" class="form-input" id="oda">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Approved Positions</label>
+                            <textarea class="form-input" id="approved-positions" rows="2" placeholder="List of approved positions"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-input" id="notes" rows="4" placeholder="Additional notes or comments"></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" class="form-checkbox" id="is-active" checked>
+                        <label for="is-active">Active Member</label>
+                    </div>
+                </div>
+                
+                <div class="member-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-member-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Member</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+    <!-- CSV/Excel Import Modal -->
+    <div id="import-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Import Members from File</h2>
+                <span class="close-btn" id="close-import-modal">&times;</span>
+            </div>
+            
+            <div style="padding: 20px;">
+                <p style="margin-bottom: 20px; line-height: 1.6;">
+                    Upload a CSV or Excel file with the following columns:<br>
+                    <strong>first_name, last_name, shield, function, platoon, station, unit, oda, email, phone, is_active, notes</strong>
+                </p>
+                
+                <!-- File Type Selection -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
+                    <label style="font-weight: 600; color: var(--secondary-color);">Select File Type:</label>
+                    <button class="file-type-btn active" id="csv-type-btn" data-type="csv" style="
+                        background: #4caf50; 
+                        color: white; 
+                        border: 2px solid #4caf50; 
+                        padding: 8px 16px; 
+                        border-radius: 6px; 
+                        cursor: pointer;
+                        font-weight: 600;
+                        transition: all 0.2s ease;
+                    ">📄 CSV File</button>
+                    <button class="file-type-btn" id="excel-type-btn" data-type="excel" style="
+                        background: var(--panel-bg); 
+                        color: var(--secondary-color); 
+                        border: 2px solid #007acc; 
+                        padding: 8px 16px; 
+                        border-radius: 6px; 
+                        cursor: pointer;
+                        font-weight: 600;
+                        transition: all 0.2s ease;
+                    ">📊 Excel File</button>
+                </div>
+                
+                <input type="file" id="file-input" accept=".csv" style="margin-bottom: 20px; padding: 16px; width: 100%; border: 3px dashed var(--border-color); border-radius: 8px; cursor: pointer;">
+                
+                <div class="member-actions">
+                    <button class="btn btn-secondary" id="cancel-import-btn">Cancel</button>
+                    <button class="btn btn-success" id="process-import-btn">Import</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onboarding Wizard Modal -->
+    <div id="onboarding-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">🎓 Member Onboarding Wizard</h2>
+                <span class="close-btn" id="close-onboarding-modal">&times;</span>
+            </div>
+            
+            <div style="padding: 20px;">
+                <div id="onboarding-step-1" class="onboarding-step">
+                    <h3 style="color: var(--primary-color); margin-bottom: 15px;">Step 1: Basic Information</h3>
+                    <p style="margin-bottom: 20px;">Let's start with the essential details.</p>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" class="form-input" id="onboard-fullname" placeholder="First and Last Name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Shield Number *</label>
+                        <input type="text" class="form-input" id="onboard-shield" placeholder="Shield Number">
+                    </div>
+                    
+                    <button class="btn btn-primary" style="width: 100%;" onclick="nextOnboardingStep(2)">Next →</button>
+                </div>
+                
+                <div id="onboarding-step-2" class="onboarding-step" style="display: none;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 15px;">Step 2: Assignment Details</h3>
+                    <p style="margin-bottom: 20px;">Where will this member be assigned?</p>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Function *</label>
+                        <select class="form-select" id="onboard-function">
+                            <option value="">Select Function</option>
+                            <option value="EMT">EMT</option>
+                            <option value="Paramedic">Paramedic</option>
+                            <option value="Lieutenant">Lieutenant</option>
+                            <option value="Captain">Captain</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Platoon</label>
+                        <select class="form-select" id="onboard-platoon">
+                            <option value="">Select Platoon</option>
+                            <option value="A">A Platoon</option>
+                            <option value="B">B Platoon</option>
+                            <option value="C">C Platoon</option>
+                            <option value="D">D Platoon</option>
+                        </select>
+                    </div>
+                    
+                    <div class="member-actions">
+                        <button class="btn btn-secondary" onclick="nextOnboardingStep(1)">← Back</button>
+                        <button class="btn btn-primary" onclick="nextOnboardingStep(3)">Next →</button>
+                    </div>
+                </div>
+                
+                <div id="onboarding-step-3" class="onboarding-step" style="display: none;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 15px;">Step 3: Contact Information</h3>
+                    <p style="margin-bottom: 20px;">How can we reach this member?</p>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" id="onboard-email" placeholder="email@example.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Phone</label>
+                        <input type="tel" class="form-input" id="onboard-phone" placeholder="(555) 123-4567">
+                    </div>
+                    
+                    <div class="member-actions">
+                        <button class="btn btn-secondary" onclick="nextOnboardingStep(2)">← Back</button>
+                        <button class="btn btn-success" onclick="completeOnboarding()">✓ Complete Onboarding</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div id="progress-container" class="progress-container">
+        <div id="progress-text" class="progress-text">Processing...</div>
+        <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // CONFIGURATION & INITIALIZATION
+        // ==========================================
+        
+        // Supabase Configuration - SAME AS MOBILE_STAFF.HTML
+        const SUPABASE_URL = 'https://lhtrjfxtbovkvrohznjd.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxodHJqZnh0Ym92a3Zyb2h6bmpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2OTY5MjEsImV4cCI6MjA3NzI3MjkyMX0.FweFjh2QhOlPRGpLX_WhsilIMSxmiilE5GYqp41EmyQ';
+        
+        let supabase = null;
+        let members = [];
+        let currentFilter = 'all';
+        let activeStatusFilters = new Set(); // Track multiple selected status filters
+        let searchQuery = '';
+        let selectedStation = '';
+        let selectedUnit = '';
+        let selectedFunction = '';
+        let currentEditingMember = null;
+        
+        // Initialize Supabase
+        if (typeof window.supabase !== 'undefined') {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            updateSyncStatus('online', 'Connected');
+            console.log('Supabase initialized successfully');
+        } else {
+            updateSyncStatus('offline', 'Supabase library not loaded');
+            console.warn('Supabase library not loaded');
+        }
+        
+        // ==========================================
+        // UTILITY FUNCTIONS
+        // ==========================================
+        
+        // Progress Bar Functions
+        function showProgress(text = 'Processing...') {
+            const container = document.getElementById('progress-container');
+            const textElement = document.getElementById('progress-text');
+            const fillElement = document.getElementById('progress-fill');
+            
+            textElement.textContent = text;
+            fillElement.style.width = '0%';
+            container.classList.add('show');
+        }
+        
+        function updateProgress(percentage, text = null) {
+            const textElement = document.getElementById('progress-text');
+            const fillElement = document.getElementById('progress-fill');
+            
+            fillElement.style.width = percentage + '%';
+            if (text) {
+                textElement.textContent = text;
+            }
+        }
+        
+        function hideProgress() {
+            const container = document.getElementById('progress-container');
+            container.classList.remove('show');
+        }
+        
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+        
+        function updateSyncStatus(status, text) {
+            const indicator = document.getElementById('sync-indicator');
+            const syncText = document.getElementById('sync-text');
+            
+            indicator.className = `sync-indicator ${status}`;
+            syncText.textContent = text;
+        }
+        
+        function updateStatusDropdown() {
+            // Get all unique status values from actual database
+            const allStatuses = new Set();
+            members.forEach(m => {
+                const status = (m.status || '').toUpperCase();
+                if (status && status !== '') {
+                    allStatuses.add(status);
+                }
+            });
+
+            // Add some common statuses that might not exist yet
+            const commonStatuses = ['ACTIVE', 'INACTIVE', 'LOA', 'FMLA', 'DETAILED', 'AWOL', 'MILITARY', 'LODI', 'W COMP', 'RESTRICTED', 'FIRE PROMO', 'WTC', 'OTHER'];
+            commonStatuses.forEach(status => allStatuses.add(status));
+
+            // Sort statuses alphabetically
+            const sortedStatuses = Array.from(allStatuses).sort();
+
+            // Update the datalist options
+            const datalist = document.getElementById('status-list');
+            if (datalist) {
+                datalist.innerHTML = sortedStatuses.map(status => 
+                    `<option value="${status}">`
+                ).join('');
+            }
+        }
+
+        function updateDynamicStatusFilters() {
+            // Get all unique special status values from actual database
+            const allStatuses = new Set();
+            members.forEach(m => {
+                const status = (m.status || '').toUpperCase();
+                // Include all statuses that are not 'ACTIVE' and not empty
+                if (status && status !== 'ACTIVE' && status !== '') {
+                    allStatuses.add(status);
+                }
+            });
+
+            const filterContainer = document.getElementById('dynamic-status-filters');
+            
+            if (allStatuses.size === 0) {
+                filterContainer.innerHTML = '<div style="color: #666; font-style: italic;">No special status members found</div>';
+                return;
+            }
+
+            // Sort statuses alphabetically
+            const sortedStatuses = Array.from(allStatuses).sort();
+            
+            // Generate filter chips for actual statuses only
+            filterContainer.innerHTML = sortedStatuses.map(status => 
+                `<div class="status-filter-chip" data-status="${status}">${status}</div>`
+            ).join('');
+
+            // Re-attach event listeners for new filter chips
+            filterContainer.querySelectorAll('.status-filter-chip').forEach(chip => {
+                chip.addEventListener('click', handleStatusFilterClick);
+            });
+        }
+
+        function updateStats() {
+            // Get filtered members based on current station, unit, and function selection
+            let filteredMembers = members;
+            
+            // Apply station filter to stats
+            if (selectedStation) {
+                filteredMembers = filteredMembers.filter(m => 
+                    m.station && m.station.toLowerCase() === selectedStation.toLowerCase()
+                );
+            }
+            
+            // Apply unit filter to stats
+            if (selectedUnit) {
+                filteredMembers = filteredMembers.filter(m => 
+                    m.unit && m.unit.toLowerCase() === selectedUnit.toLowerCase()
+                );
+            }
+            
+            // Apply function filter to stats
+            if (selectedFunction) {
+                filteredMembers = filteredMembers.filter(m => 
+                    m.function && m.function === selectedFunction
+                );
+            }
+            
+            const total = filteredMembers.length;
+            const active = filteredMembers.filter(m => m.is_active).length;
+            
+            // Get special status members (not ACTIVE and not INACTIVE)
+            const special = filteredMembers.filter(m => {
+                const status = (m.status || '').toUpperCase();
+                return status && status !== 'ACTIVE' && status !== 'INACTIVE' && status !== '';
+            }).length;
+            
+            const inactive = total - active - special;
+            
+            // Update stat display with context
+            const stationText = selectedStation ? ` (${selectedStation})` : '';
+            const unitText = selectedUnit ? ` (${selectedUnit})` : '';
+            const functionText = selectedFunction ? ` (${selectedFunction})` : '';
+            const filterContext = stationText || unitText || functionText;
+            
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-active').textContent = active;
+            document.getElementById('stat-inactive').textContent = inactive;
+            document.getElementById('stat-special').textContent = special;
+            
+            // Update stat labels to show context
+            document.querySelector('#stat-total').parentElement.querySelector('.stat-label').textContent = 
+                `Total Members${filterContext}`;
+            
+            const now = new Date();
+            document.getElementById('stat-sync').textContent = now.toLocaleTimeString();
+            
+            // Update dynamic status filters based on actual data
+            updateDynamicStatusFilters();
+            
+            // Update status dropdown options based on actual data
+            updateStatusDropdown();
+        }
+        
+        // ==========================================
+        // FORM TOGGLE FUNCTION
+        // ==========================================
+        
+        function toggleExtraFields() {
+            const section = document.getElementById('extra-fields-section');
+            const button = document.getElementById('toggle-extra-fields');
+            const icon = document.getElementById('toggle-icon');
+            
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+                icon.textContent = '▲';
+                button.innerHTML = '<span id="toggle-icon">▲</span> Hide Extra Fields';
+            } else {
+                section.style.display = 'none';
+                icon.textContent = '▼';
+                button.innerHTML = '<span id="toggle-icon">▼</span> Show More Fields';
+            }
+        }
+        
+        function removeDuplicates() {
+            const seen = new Map();
+            const unique = [];
+            
+            for (const member of members) {
+                const key = member.shield || member.id;
+                if (!seen.has(key)) {
+                    seen.set(key, true);
+                    unique.push(member);
+                }
+            }
+            
+            const duplicatesRemoved = members.length - unique.length;
+            if (duplicatesRemoved > 0) {
+                members = unique;
+                localStorage.setItem('ems_members', JSON.stringify(members));
+                renderMembers();
+                updateStats();
+                showToast(`🧹 Removed ${duplicatesRemoved} duplicate(s)`, 'success');
+            } else {
+                showToast('✅ No duplicates found', 'success');
+            }
+        }
+        
+        function populateStationDropdown() {
+            const stationSelect = document.getElementById('station-select');
+            if (!stationSelect) return;
+            
+            // Get unique stations from members
+            const stations = [...new Set(members.map(m => m.station).filter(s => s))];
+            stations.sort();
+            
+            // Clear existing options (except "All Stations")
+            stationSelect.innerHTML = '<option value="">All Stations</option>';
+            
+            // Add station options
+            stations.forEach(station => {
+                const option = document.createElement('option');
+                option.value = station;
+                option.textContent = station;
+                stationSelect.appendChild(option);
+            });
+            
+            console.log(`📍 Found ${stations.length} unique stations:`, stations);
+        }
+        
+        function populateUnitDropdown() {
+            const unitSelect = document.getElementById('unit-select');
+            if (!unitSelect) return;
+            
+            // Get unique units from members
+            const units = [...new Set(members.map(m => m.unit).filter(u => u))];
+            units.sort();
+            
+            // Clear existing options (except "All Units")
+            unitSelect.innerHTML = '<option value="">All Units</option>';
+            
+            // Add unit options
+            units.forEach(unit => {
+                const option = document.createElement('option');
+                option.value = unit;
+                option.textContent = unit;
+                unitSelect.appendChild(option);
+            });
+            
+            console.log(`🚑 Found ${units.length} unique units:`, units);
+        }
+        
+        function populateFunctionDropdown() {
+            const functionSelect = document.getElementById('function-select');
+            if (!functionSelect) return;
+            
+            // Get unique functions from members
+            const functions = [...new Set(members.map(m => m.function).filter(f => f))];
+            functions.sort();
+            
+            // Clear existing options (except "All Functions")
+            functionSelect.innerHTML = '<option value="">All Functions</option>';
+            
+            // Add function options
+            functions.forEach(func => {
+                const option = document.createElement('option');
+                option.value = func;
+                option.textContent = func;
+                functionSelect.appendChild(option);
+            });
+            
+            console.log(`👤 Found ${functions.length} unique functions:`, functions);
+        }
+        
+        // ==========================================
+        // DATABASE FUNCTIONS
+        // ==========================================
+        
+        async function loadMembersFromCloud() {
+            if (!supabase) {
+                showToast('Supabase not configured', 'error');
+                return;
+            }
+            
+            if (!confirm('⚠️ SYNC FROM CLOUD?\n\nThis will REPLACE your local data with data from the cloud.\n\nAny unsaved local changes will be LOST.\n\nAre you sure?')) {
+                return;
+            }
+            
+            try {
+                updateSyncStatus('syncing', 'Syncing...');
+                showProgress('Loading members from cloud...');
+                
+                const { data, error } = await supabase
+                    .from('employees')
+                    .select('*')
+                    .order('last_name', { ascending: true });
+                
+                if (error) throw error;
+                
+                updateProgress(30, 'Processing member data...');
+                
+                // Debug: Show raw data from database
+                if (data && data.length > 0) {
+                    console.log('🔍 RAW DATABASE DATA (first member):', data[0]);
+                    console.log('🔍 Database field names:', Object.keys(data[0]));
+                }
+                
+                updateProgress(50, `Normalizing ${data.length} members...`);
+                
+                // Normalize field names to handle database variations (enhanced flexibility)
+                members = (data || []).map(member => {
+                    // Handle different field name variations with comprehensive mapping
+                    const normalized = {
+                        id: member.id,
+                        first_name: member.first_name || member.firstname || member.FirstName || member.First_Name || member.FIRST_NAME || '',
+                        last_name: member.last_name || member.lastname || member.LastName || member.Last_Name || member.LAST_NAME || '',
+                        shield: member.shield || member.Shield || member.SHIELD || '', // Shield field
+                        reference: member.reference || member.ref_number || member.ref || member.Reference || member.RefNumber || member.Ref_Number || '', // Reference field (SEPARATE from shield)
+                        dob: member.dob || member.DOB || member.Dob || member.date_of_birth || member.DateOfBirth || member.Date_Of_Birth || '',
+                        function: member.function || member.Function || member.FUNCTION || '',
+                        tour: member.tour || member.Tour || member.TOUR || '',
+                        platoon: member.platoon || member.Platoon || member.PLATOON || member.plt || member.Plt || member.PLT || '',
+                        start_time: member.start_time || member.starttime || member.StartTime || member.Start_Time || member.start || member.Start || '',
+                        station: member.station || member.Station || member.STATION || member.station_name || member.StationName || member.Station_Name || member.station_display || member.StationDisplay || member['station-display'] || '',
+                        unit: member.unit || member.Unit || member.UNIT || member.unit_name || member.UnitName || member.Unit_Name || member.unit_number || member.UnitNumber || member.Unit_Number || '',
+                        vax: member.vax || member.vax_number || member.vaxnumber || member.Vax || member.VAX || member.VaxNumber || member.Vax_Number || member['vax#'] || member['Vax#'] || '',
+                        approved_positions: member.approved_positions || member.approvedpositions || member.ApprovedPositions || member.Approved_Positions || member['approved positions'] || member['Approved Positions'] || '',
+                        status: member.status || member.Status || member.STATUS || member.employment_status || member.EmploymentStatus || member.Employment_Status || 'ACTIVE',
+                        email: member.email || member.Email || member.EMAIL || member.email_address || member.EmailAddress || member.Email_Address || '',
+                        phone: member.phone || member.Phone || member.PHONE || member.phone_number || member.PhoneNumber || member.Phone_Number || member.work_phone || member.WorkPhone || member.Work_Phone || '',
+                        oda: member.oda || member.ODA || member.Oda || member.original_date_appointment || member.OriginalDateAppointment || member.Original_Date_Appointment || '',
+                        notes: member.notes || member.Notes || member.NOTES || member.comments || member.Comments || member.COMMENTS || '',
+                        created_at: member.created_at || member.CreatedAt || member.Created_At,
+                        updated_at: member.updated_at || member.UpdatedAt || member.Updated_At
+                    };
+                    
+                    // Determine is_active based on status - if status is 'ACTIVE', set is_active to true
+                    const status = normalized.status.toUpperCase();
+                    normalized.is_active = status === 'ACTIVE';
+                    
+                    return normalized;
+                });
+                
+                updateProgress(70, 'Updating local storage...');
+                
+                // Debug: Show normalized data
+                if (members.length > 0) {
+                    console.log('✅ NORMALIZED DATA (first member):', members[0]);
+                    console.log('✅ Station value:', members[0].station);
+                    console.log('✅ Unit value:', members[0].unit);
+                }
+                
+                localStorage.setItem('ems_members', JSON.stringify(members));
+                
+                updateProgress(85, 'Refreshing UI...');
+                
+                populateStationDropdown();
+                populateUnitDropdown();
+                populateFunctionDropdown();
+                renderMembers();
+                updateStats();
+                
+                updateProgress(100, 'Sync complete!');
+                
+                // Hide progress bar after a short delay
+                setTimeout(() => {
+                    hideProgress();
+                }, 500);
+                
+                updateSyncStatus('online', 'Synced');
+                showToast(`✅ Synced ${members.length} members from cloud`, 'success');
+                
+                // Update last sync time
+                document.getElementById('stat-sync').textContent = new Date().toLocaleTimeString();
+            } catch (error) {
+                console.error('Error loading members:', error);
+                hideProgress();
+                showToast('Failed to load from cloud: ' + error.message, 'error');
+                updateSyncStatus('offline', 'Sync Failed');
+            }
+        }
+        
+        // Helper function to get or create station by name
+        async function getOrCreateStation(stationName) {
+            if (!stationName || !supabase) return null;
+            
+            try {
+                // Clean up station name
+                const cleanName = stationName.trim();
+                const stationCode = cleanName.toUpperCase();
+                
+                // First, try to find existing station by code or name
+                const { data: existingStation, error: searchError } = await supabase
+                    .from('stations')
+                    .select('id, station_code, station_name')
+                    .or(`station_code.ilike.${stationCode},station_name.ilike.${cleanName}`)
+                    .limit(1)
+                    .single();
+                
+                if (existingStation) {
+                    console.log(`✅ Found existing station: ${existingStation.station_name}`);
+                    return existingStation.id;
+                }
+                
+                // Station doesn't exist, create it
+                console.log(`🆕 Creating new station: ${cleanName}`);
+                const { data: newStation, error: createError } = await supabase
+                    .from('stations')
+                    .insert([{
+                        station_code: stationCode,
+                        station_name: cleanName
+                    }])
+                    .select()
+                    .single();
+                
+                if (createError) {
+                    console.error('Error creating station:', createError);
+                    return null;
+                }
+                
+                console.log(`✅ Created station: ${newStation.station_name} (ID: ${newStation.id})`);
+                return newStation.id;
+                
+            } catch (error) {
+                console.error('Error in getOrCreateStation:', error);
+                return null;
+            }
+        }
+        
+        async function pushAllToCloud() {
+            if (!supabase) {
+                showToast('Supabase not configured', 'error');
+                return;
+            }
+            
+            if (members.length === 0) {
+                showToast('No members to push', 'error');
+                return;
+            }
+            
+            if (!confirm(`☁️ PUSH ${members.length} MEMBERS TO CLOUD?\n\nThis will upload ALL local members to the cloud database.\n\nExisting members will be updated.\nNew members will be added.\n\nAre you sure?`)) {
+                return;
+            }
+            
+            try {
+                updateSyncStatus('syncing', 'Pushing to cloud...');
+                showProgress(`Pushing ${members.length} members to cloud...`);
+                
+                let successCount = 0;
+                let errorCount = 0;
+                const totalMembers = members.length;
+                
+                for (let i = 0; i < members.length; i++) {
+                    const member = members[i];
+                    
+                    try {
+                        // Update progress bar
+                        const percentage = Math.round(((i + 1) / totalMembers) * 100);
+                        updateProgress(percentage, `Pushing member ${i + 1} of ${totalMembers}: ${member.first_name} ${member.last_name}`);
+                        
+                        // Get or create station_id from station name
+                        let stationId = null;
+                        if (member.station) {
+                            stationId = await getOrCreateStation(member.station);
+                        }
+                        
+                        // Map to database field names - shield and reference are SEPARATE fields
+                        const dbMember = {
+                            first_name: member.first_name || '',
+                            last_name: member.last_name || '',
+                            shield: member.shield || 'N/A', // Database column 'shield' (NOT NULL)
+                            reference: member.reference || '', // SEPARATE field from shield
+                            dob: member.dob || '',
+                            approved_positions: member.approved_positions || '',
+                            function: member.function || '',
+                            tour: member.tour || '',
+                            platoon: member.platoon || '',
+                            start_time: member.start_time || '',
+                            station: member.station || '',
+                            station_id: stationId, // Add station_id UUID foreign key
+                            unit: member.unit || '',
+                            vax: member.vax || '',
+                            status: member.status || 'ACTIVE',
+                            oda: member.oda || ''
+                        };
+                        
+                        if (member.id && typeof member.id === 'string') {
+                            // Update existing member (UUID)
+                            const { error } = await supabase
+                                .from('employees')
+                                .update(dbMember)
+                                .eq('id', member.id);
+                            
+                            if (error) throw error;
+                        } else {
+                            // Insert new member (let database assign ID)
+                            const { data, error } = await supabase
+                                .from('employees')
+                                .insert([dbMember])
+                                .select();
+                            
+                            if (error) throw error;
+                            
+                            // Update local member with database ID
+                            if (data && data[0]) {
+                                member.id = data[0].id;
+                            }
+                        }
+                        successCount++;
+                    } catch (error) {
+                        console.error(`Failed to push member ${member.first_name} ${member.last_name}:`, error);
+                        errorCount++;
+                    }
+                }
+                
+                // Save updated members with new IDs
+                localStorage.setItem('ems_members', JSON.stringify(members));
+                
+                // Hide progress bar
+                hideProgress();
+                
+                updateSyncStatus('online', 'Push Complete');
+                if (errorCount === 0) {
+                    showToast(`✅ Successfully pushed ${successCount} members to cloud`, 'success');
+                } else {
+                    showToast(`⚠️ Pushed ${successCount} members, ${errorCount} failed`, 'info');
+                }
+                
+                // Update last sync time
+                document.getElementById('stat-sync').textContent = new Date().toLocaleTimeString();
+            } catch (error) {
+                console.error('Error pushing to cloud:', error);
+                hideProgress();
+                showToast('Failed to push to cloud: ' + error.message, 'error');
+                updateSyncStatus('offline', 'Push Failed');
+            }
+        }
+        
+        function loadMembersFromLocal() {
+            const stored = localStorage.getItem('ems_members');
+            if (stored) {
+                members = JSON.parse(stored);
+                populateStationDropdown();
+                populateUnitDropdown();
+                populateFunctionDropdown();
+                renderMembers();
+                updateStats();
+            }
+        }
+        
+        async function saveMemberToCloud(member) {
+            if (!supabase) {
+                saveMemberToLocal(member);
+                return;
+            }
+            
+            try {
+                // Get or create station_id from station name
+                let stationId = null;
+                if (member.station) {
+                    stationId = await getOrCreateStation(member.station);
+                }
+                
+                // Map to database field names - shield and reference are SEPARATE fields
+                const dbMember = {
+                    first_name: member.first_name || '',
+                    last_name: member.last_name || '',
+                    shield: member.shield || 'N/A', // Database column 'shield' (NOT NULL) - defaults to 'N/A' if missing
+                    reference: member.reference || '', // Separate field - reference is NOT the same as shield
+                    dob: member.dob || '',
+                    approved_positions: member.approved_positions || '',
+                    function: member.function || '',
+                    tour: member.tour || '',
+                    platoon: member.platoon || '',
+                    start_time: member.start_time || '',
+                    station: member.station || '',
+                    station_id: stationId, // Add station_id UUID foreign key
+                    unit: member.unit || '',
+                    vax: member.vax || '',
+                    status: member.status || 'ACTIVE',
+                    oda: member.oda || ''
+                    // Note: email, phone, notes, is_active removed as they may not exist in your DB schema
+                };
+                
+                if (member.id) {
+                    // Update existing
+                    const { error } = await supabase
+                        .from('employees')
+                        .update(dbMember)
+                        .eq('id', member.id);
+                    
+                    if (error) throw error;
+                } else {
+                    // Insert new
+                    const { data, error } = await supabase
+                        .from('employees')
+                        .insert([dbMember])
+                        .select();
+                    
+                    if (error) throw error;
+                    member.id = data[0].id;
+                }
+                
+                saveMemberToLocal(member);
+                showToast('Member saved to cloud', 'success');
+            } catch (error) {
+                console.error('Error saving member:', error);
+                showToast('Saved locally only', 'info');
+                saveMemberToLocal(member);
+            }
+        }
+        
+        function saveMemberToLocal(member) {
+            // Find by ID first, then by shield to prevent duplicates
+            let index = -1;
+            if (member.id) {
+                index = members.findIndex(m => m.id === member.id);
+            }
+            
+            // If not found by ID, check for duplicate shield
+            if (index < 0 && member.shield) {
+                index = members.findIndex(m => m.shield === member.shield);
+            }
+            
+            if (index >= 0) {
+                // Update existing member
+                members[index] = member;
+            } else {
+                // Add new member
+                if (!member.id) {
+                    member.id = Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9);
+                }
+                members.push(member);
+            }
+            
+            localStorage.setItem('ems_members', JSON.stringify(members));
+            populateStationDropdown();
+            populateFunctionDropdown();
+            renderMembers();
+            updateStats();
+        }
+        
+        async function deleteMemberFromCloud(memberId) {
+            if (!supabase) {
+                deleteMemberFromLocal(memberId);
+                return;
+            }
+            
+            try {
+                const { error } = await supabase
+                    .from('employees')
+                    .delete()
+                    .eq('id', memberId);
+                
+                if (error) throw error;
+                
+                deleteMemberFromLocal(memberId);
+                showToast('Member deleted from cloud', 'success');
+            } catch (error) {
+                console.error('Error deleting member:', error);
+                showToast('Deleted locally only', 'info');
+                deleteMemberFromLocal(memberId);
+            }
+        }
+        
+        function deleteMemberFromLocal(memberId) {
+            members = members.filter(m => m.id !== memberId);
+            localStorage.setItem('ems_members', JSON.stringify(members));
+            renderMembers();
+            updateStats();
+        }
+        
+        // ==========================================
+        // RENDER FUNCTIONS
+        // ==========================================
+        
+        function renderMembers() {
+            const grid = document.getElementById('member-grid');
+            
+            let filteredMembers = members;
+            
+            // Apply search filter
+            if (searchQuery) {
+                filteredMembers = filteredMembers.filter(m => {
+                    const searchStr = `${m.first_name} ${m.last_name} ${m.shield} ${m.function} ${m.platoon} ${m.station} ${m.unit}`.toLowerCase();
+                    return searchStr.includes(searchQuery.toLowerCase());
+                });
+            }
+            
+            // Apply station filter
+            if (selectedStation) {
+                filteredMembers = filteredMembers.filter(m => 
+                    m.station && m.station.toLowerCase() === selectedStation.toLowerCase()
+                );
+            }
+            
+            // Apply unit filter
+            if (selectedUnit) {
+                filteredMembers = filteredMembers.filter(m => 
+                    m.unit && m.unit.toLowerCase() === selectedUnit.toLowerCase()
+                );
+            }
+            
+            // Apply function filter
+            if (selectedFunction) {
+                filteredMembers = filteredMembers.filter(m => 
+                    m.function && m.function === selectedFunction
+                );
+            }
+            
+            // Apply basic status filter (All, Active, Special, Inactive)
+            if (currentFilter === 'active') {
+                filteredMembers = filteredMembers.filter(m => m.is_active);
+            } else if (currentFilter === 'special') {
+                // Special shows only members with special statuses (not ACTIVE and not INACTIVE)
+                filteredMembers = filteredMembers.filter(m => {
+                    const status = (m.status || '').toUpperCase();
+                    return status && status !== 'ACTIVE' && status !== 'INACTIVE' && status !== '';
+                });
+            } else if (currentFilter === 'inactive') {
+                // Get all actual special statuses from current data
+                const actualSpecialStatuses = new Set();
+                members.forEach(m => {
+                    const status = (m.status || '').toUpperCase();
+                    if (status && status !== 'ACTIVE' && status !== '' && status !== 'INACTIVE') {
+                        actualSpecialStatuses.add(status);
+                    }
+                });
+                
+                filteredMembers = filteredMembers.filter(m => {
+                    const status = (m.status || '').toUpperCase();
+                    return status === 'INACTIVE' || (status === '' && !m.is_active);
+                });
+            }
+            
+            // Apply special status filters (if any are selected)
+            if (activeStatusFilters.size > 0) {
+                filteredMembers = filteredMembers.filter(m => {
+                    const status = (m.status || '').toUpperCase();
+                    return activeStatusFilters.has(status);
+                });
+            }
+            
+            if (filteredMembers.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-text">No members found</div>
+                        <p>Try adjusting your filters or add a new member</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = filteredMembers.map(member => {
+                // Check if member has special status (any status that is not ACTIVE or INACTIVE)
+                const status = (member.status || '').toUpperCase();
+                const isSpecialStatus = status && status !== 'ACTIVE' && status !== 'INACTIVE' && status !== '';
+                const cardClass = isSpecialStatus ? 'member-card special-status' : 'member-card';
+                
+                return `
+                <div class="${cardClass}" ${isSpecialStatus ? `onclick="toggleSpecialStatusCard(this)"` : ''}>
+                    <div class="member-header">
+                        <div>
+                            <div class="member-name">${member.first_name} ${member.last_name}</div>
+                            <div class="member-id">Shield: ${member.shield}</div>
+                        </div>
+                        <div class="status-badge ${isSpecialStatus ? 'status-special' : (member.is_active ? 'status-active' : 'status-inactive')}">
+                            ${member.status || (member.is_active ? 'Active' : 'Inactive')}
+                        </div>
+                    </div>
+                    
+                    <div class="member-info">
+                        ${member.dob ? `
+                        <div class="info-row dob-info">
+                            <span class="info-label">DOB:</span>
+                            <span class="info-value">${member.dob}</span>
+                        </div>
+                        <div class="info-row dob-protected" style="display: none;">
+                            <span class="info-label">DOB:</span>
+                            <span class="info-value">🔒 Protected</span>
+                        </div>
+                        ` : ''}
+                        <div class="info-row">
+                            <span class="info-label">Function:</span>
+                            <span class="info-value">${member.function || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Tour:</span>
+                            <span class="info-value">${member.tour || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Platoon:</span>
+                            <span class="info-value">${member.platoon || 'N/A'}</span>
+                        </div>
+                        ${member.start_time ? `
+                        <div class="info-row">
+                            <span class="info-label">Start Time:</span>
+                            <span class="info-value">${member.start_time}</span>
+                        </div>
+                        ` : ''}
+                        <div class="info-row">
+                            <span class="info-label">Station:</span>
+                            <span class="info-value">${member.station || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Unit:</span>
+                            <span class="info-value">${member.unit || 'N/A'}</span>
+                        </div>
+                        ${member.vax ? `
+                        <div class="info-row">
+                            <span class="info-label">Vax#:</span>
+                            <span class="info-value">${member.vax}</span>
+                        </div>
+                        ` : ''}
+                        ${member.approved_positions ? `
+                        <div class="info-row">
+                            <span class="info-label">Approved Positions:</span>
+                            <span class="info-value">${member.approved_positions}</span>
+                        </div>
+                        ` : ''}
+                        ${member.email ? `
+                        <div class="info-row">
+                            <span class="info-label">Email:</span>
+                            <span class="info-value">${member.email}</span>
+                        </div>
+                        ` : ''}
+                        ${member.phone ? `
+                        <div class="info-row">
+                            <span class="info-label">Phone:</span>
+                            <span class="info-value">
+                                ${member.phone}
+                                <a href="tel:${member.phone}" 
+                                   class="phone-call-icon" 
+                                   title="Call ${member.first_name} ${member.last_name}"
+                                   onclick="event.stopPropagation();">📞</a>
+                            </span>
+                        </div>
+                        ` : ''}
+                        ${member.oda ? `
+                        <div class="info-row">
+                            <span class="info-label">ODA:</span>
+                            <span class="info-value">${member.oda}</span>
+                        </div>
+                        ` : ''}
+                        ${member.notes ? `
+                        <div class="info-row">
+                            <span class="info-label">Notes:</span>
+                            <span class="info-value">${member.notes}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="member-actions">
+                        <button class="btn btn-secondary" onclick="editMember('${member.id}')">✏️ Edit</button>
+                        <button class="btn btn-primary" onclick="deleteMember('${member.id}')">🗑️ Delete</button>
+                    </div>
+                </div>
+            `;
+            }).join('');
+            
+            // Apply DOB privacy after rendering
+            if (typeof applyDOBPrivacy === 'function') {
+                applyDOBPrivacy();
+            }
+        }
+        
+        // ==========================================
+        // MEMBER CRUD OPERATIONS
+        // ==========================================
+        
+        function openAddMemberModal() {
+            currentEditingMember = null;
+            document.getElementById('modal-title').textContent = 'Add New Member';
+            document.getElementById('member-form').reset();
+            document.getElementById('member-id').value = '';
+            document.getElementById('is-active').checked = true;
+            document.getElementById('member-modal').classList.add('show');
+        }
+        
+        function editMember(memberId) {
+            const member = members.find(m => m.id == memberId);
+            if (!member) return;
+            
+            currentEditingMember = member;
+            document.getElementById('modal-title').textContent = 'Edit Member';
+            
+            document.getElementById('member-id').value = member.id;
+            document.getElementById('first-name').value = member.first_name || '';
+            document.getElementById('last-name').value = member.last_name || '';
+            document.getElementById('shield-number').value = member.shield || '';
+            document.getElementById('dob').value = member.dob || '';
+            document.getElementById('function').value = member.function || '';
+            document.getElementById('tour').value = member.tour || '';
+            document.getElementById('platoon').value = member.platoon || '';
+            document.getElementById('start-time').value = member.start_time || '';
+            document.getElementById('station').value = member.station || '';
+            document.getElementById('unit').value = member.unit || '';
+            document.getElementById('vax-number').value = member.vax || '';
+            document.getElementById('approved-positions').value = member.approved_positions || '';
+            document.getElementById('status').value = member.status || 'ACTIVE';
+            document.getElementById('oda').value = member.oda || '';
+            document.getElementById('email').value = member.email || '';
+            document.getElementById('phone').value = member.phone || '';
+            document.getElementById('notes').value = member.notes || '';
+            document.getElementById('is-active').checked = member.is_active !== false;
+            
+            document.getElementById('member-modal').classList.add('show');
+        }
+        
+        async function deleteMember(memberId) {
+            const member = members.find(m => m.id == memberId);
+            if (!member) return;
+            
+            if (!confirm(`Are you sure you want to delete ${member.first_name} ${member.last_name}?`)) {
+                return;
+            }
+            
+            await deleteMemberFromCloud(memberId);
+        }
+        
+
+        
+        // ==========================================
+        // CSV IMPORT/EXPORT
+        // ==========================================
+        
+        function exportToCSV() {
+            if (members.length === 0) {
+                showToast('No members to export', 'error');
+                return;
+            }
+            
+            const headers = ['dob', 'approved_positions', 'first_name', 'last_name', 'function', 'tour', 'platoon', 'start_time', 'shield', 'vax', 'status', 'unit', 'station', 'email', 'phone', 'oda', 'is_active', 'notes'];
+            const headerLabels = ['DOB', 'Approved Positions', 'FirstName', 'LastName', 'Function', 'Tour', 'Platoon', 'Start Time', 'Shield', 'Vax#', 'Status', 'Unit', 'Station', 'Email', 'Phone', 'ODA', 'Is_Active', 'Notes'];
+            
+            const csvData = members.map(m => {
+                return headers.map(h => {
+                    const value = m[h] !== undefined && m[h] !== null ? m[h] : '';
+                    return `"${String(value).replace(/"/g, '""')}"`;
+                }).join(',');
+            });
+            
+            const csv = [headerLabels.join(','), ...csvData].join('\n');
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `ems-members-${Date.now()}.csv`;
+            link.click();
+            
+            showToast('CSV exported successfully', 'success');
+        }
+        
+        function processFileImport() {
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+            const activeType = document.querySelector('.file-type-btn.active').dataset.type;
+            
+            if (!file) {
+                showToast('Please select a file', 'error');
+                return;
+            }
+            
+            // Check file extension matches selected type
+            const fileName = file.name.toLowerCase();
+            const isCSV = fileName.endsWith('.csv');
+            const isExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+            
+            if (activeType === 'csv' && !isCSV) {
+                showToast('Please select a CSV file', 'error');
+                return;
+            }
+            
+            if (activeType === 'excel' && !isExcel) {
+                showToast('Please select an Excel file (.xlsx or .xls)', 'error');
+                return;
+            }
+            
+            if (activeType === 'excel') {
+                processExcelImport(file);
+            } else {
+                processCSVImport(file);
+            }
+        }
+        
+        function processExcelImport(file) {
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    
+                    // Convert to JSON
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    if (jsonData.length < 2) {
+                        showToast('Excel file must have headers and at least one data row', 'error');
+                        return;
+                    }
+                    
+                    const headers = jsonData[0];
+                    const importedMembers = [];
+                    
+                    console.log('📊 Excel Headers detected:', headers);
+                    console.log('📊 Total rows in Excel:', jsonData.length);
+                    
+                    // Create flexible column mapping (same as CSV)
+                    const findColumnIndex = (possibleNames) => {
+                        for (let i = 0; i < headers.length; i++) {
+                            const header = (headers[i] || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+                            for (const name of possibleNames) {
+                                const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+                                if (header === cleanName || header.includes(cleanName) || cleanName.includes(header)) {
+                                    return i;
+                                }
+                            }
+                        }
+                        return -1;
+                    };
+                    
+                    const columnMap = {
+                        firstName: findColumnIndex(['firstname', 'first_name', 'FirstName', 'First_Name', 'first', 'givenname']),
+                        lastName: findColumnIndex(['lastname', 'last_name', 'LastName', 'Last_Name', 'last', 'surname', 'familyname']),
+                        shield: findColumnIndex(['shield', 'Shield', 'SHIELD', 'badge']),
+                        reference: findColumnIndex(['reference', 'Reference', 'REFERENCE', 'ref', 'Ref', 'REF', 'ref_number', 'RefNumber', 'Ref_Number']),
+                        dob: findColumnIndex(['dob', 'DOB', 'Dob', 'date_of_birth', 'DateOfBirth', 'Date_Of_Birth', 'birthdate']),
+                        function: findColumnIndex(['function', 'Function', 'FUNCTION']),
+                        tour: findColumnIndex(['tour', 'Tour', 'TOUR']),
+                        platoon: findColumnIndex(['platoon', 'Platoon', 'PLATOON', 'plt', 'Plt', 'PLT']),
+                        startTime: findColumnIndex(['start_time', 'starttime', 'StartTime', 'Start_Time', 'start', 'Start']),
+                        station: findColumnIndex(['station', 'Station', 'STATION', 'station_name', 'StationName', 'Station_Name', 'house']),
+                        unit: findColumnIndex(['unit', 'Unit', 'UNIT', 'unit_name', 'UnitName', 'Unit_Name', 'unit_number', 'UnitNumber', 'Unit_Number']),
+                        vax: findColumnIndex(['vax', 'Vax', 'VAX', 'vax#', 'Vax#', 'VAX#', 'vax_number', 'VaxNumber', 'Vax_Number', 'vaccination']),
+                        approvedPositions: findColumnIndex(['approved_positions', 'ApprovedPositions', 'Approved_Positions', 'approved', 'positions']),
+                        status: findColumnIndex(['status', 'Status', 'STATUS', 'employment_status', 'EmploymentStatus']),
+                        email: findColumnIndex(['email', 'Email', 'EMAIL', 'email_address', 'EmailAddress']),
+                        phone: findColumnIndex(['phone', 'Phone', 'PHONE', 'phone_number', 'PhoneNumber', 'work_phone']),
+                        oda: findColumnIndex(['oda', 'ODA', 'Oda']),
+                        notes: findColumnIndex(['notes', 'Notes', 'NOTES', 'comments', 'Comments'])
+                    };
+                    
+                    // Process data rows (skip header)
+                    for (let i = 1; i < jsonData.length; i++) {
+                        const row = jsonData[i];
+                        if (!row || row.every(cell => !cell)) continue; // Skip empty rows
+                        
+                        const status = columnMap.status >= 0 ? (row[columnMap.status] || '').toString() || 'ACTIVE' : 'ACTIVE';
+                        const member = {
+                            first_name: columnMap.firstName >= 0 ? (row[columnMap.firstName] || '').toString() : '',
+                            last_name: columnMap.lastName >= 0 ? (row[columnMap.lastName] || '').toString() : '',
+                            shield: columnMap.shield >= 0 ? (row[columnMap.shield] || '').toString() : '',
+                            reference: columnMap.reference >= 0 ? (row[columnMap.reference] || '').toString() : '',
+                            dob: columnMap.dob >= 0 ? (row[columnMap.dob] || '').toString() : '',
+                            function: columnMap.function >= 0 ? (row[columnMap.function] || '').toString() : '',
+                            tour: columnMap.tour >= 0 ? (row[columnMap.tour] || '').toString() : '',
+                            platoon: columnMap.platoon >= 0 ? (row[columnMap.platoon] || '').toString() : '',
+                            start_time: columnMap.startTime >= 0 ? (row[columnMap.startTime] || '').toString() : '',
+                            station: columnMap.station >= 0 ? (row[columnMap.station] || '').toString() : '',
+                            unit: columnMap.unit >= 0 ? (row[columnMap.unit] || '').toString() : '',
+                            vax: columnMap.vax >= 0 ? (row[columnMap.vax] || '').toString() : '',
+                            approved_positions: columnMap.approvedPositions >= 0 ? (row[columnMap.approvedPositions] || '').toString() : '',
+                            status: status,
+                            email: columnMap.email >= 0 ? (row[columnMap.email] || '').toString() : '',
+                            phone: columnMap.phone >= 0 ? (row[columnMap.phone] || '').toString() : '',
+                            oda: columnMap.oda >= 0 ? (row[columnMap.oda] || '').toString() : '',
+                            notes: columnMap.notes >= 0 ? (row[columnMap.notes] || '').toString() : '',
+                            is_active: status.toUpperCase() === 'ACTIVE' // Set is_active based on status
+                        };
+                        
+                        importedMembers.push(member);
+                    }
+                    
+                    console.log('📊 Total members parsed from Excel:', importedMembers.length);
+                    console.log('📊 First member:', importedMembers[0]);
+                    
+                    if (importedMembers.length === 0) {
+                        hideProgress();
+                        showToast('No valid data found in Excel file', 'error');
+                        return;
+                    }
+                    
+                    // Show progress and save members in batches for better performance
+                    showProgress(`Importing ${importedMembers.length} members from Excel...`);
+                    
+                    const batchSize = 10; // Process in batches of 10
+                    let processed = 0;
+                    let successCount = 0;
+                    let errorCount = 0;
+                    
+                    for (let i = 0; i < importedMembers.length; i += batchSize) {
+                        const batch = importedMembers.slice(i, i + batchSize);
+                        
+                        // Process batch with error handling for each member
+                        const batchResults = await Promise.allSettled(
+                            batch.map(async member => {
+                                try {
+                                    await saveMemberToCloud(member);
+                                    return { success: true, member };
+                                } catch (error) {
+                                    console.error(`Error saving member ${member.first_name} ${member.last_name}:`, error);
+                                    // Save locally if cloud fails
+                                    saveMemberToLocal(member);
+                                    return { success: false, member, error };
+                                }
+                            })
+                        );
+                        
+                        // Count results
+                        batchResults.forEach(result => {
+                            if (result.status === 'fulfilled') {
+                                if (result.value.success) {
+                                    successCount++;
+                                } else {
+                                    errorCount++;
+                                }
+                            } else {
+                                errorCount++;
+                            }
+                        });
+                        
+                        processed += batch.length;
+                        const percentage = Math.round((processed / importedMembers.length) * 100);
+                        updateProgress(percentage, `Processed ${processed}/${importedMembers.length} members...`);
+                        
+                        // Small delay to allow UI update
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                    }
+                    
+                    hideProgress();
+                    document.getElementById('import-modal').classList.remove('show');
+                    
+                    // Show appropriate success/warning message based on results
+                    if (errorCount === 0) {
+                        showToast(`✅ Successfully imported ${successCount} members to cloud`, 'success');
+                    } else if (successCount > 0) {
+                        showToast(`⚠️ Imported ${successCount} to cloud, ${errorCount} saved locally only`, 'info');
+                    } else {
+                        showToast(`📋 Imported ${importedMembers.length} members locally (cloud sync unavailable)`, 'info');
+                    }
+                    
+                    loadMembersFromLocal(); // Refresh the display
+                    
+                } catch (error) {
+                    console.error('Excel import error:', error);
+                    hideProgress();
+                    showToast('Failed to import Excel file: ' + error.message, 'error');
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function processCSVImport(file) {
+            
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const csv = e.target.result;
+                    const lines = csv.split('\n');
+                    
+                    // Handle different delimiters
+                    let delimiter = ',';
+                    let headers = lines[0].split(',');
+                    if (headers.length < 5) {
+                        delimiter = ';';
+                        headers = lines[0].split(';');
+                    }
+                    if (headers.length < 5) {
+                        delimiter = '\t';
+                        headers = lines[0].split('\t');
+                    }
+                    
+                    headers = headers.map(h => h.trim().replace(/"/g, ''));
+                    
+                    console.log('📋 CSV Headers detected:', headers);
+                    console.log('📋 Total lines in CSV:', lines.length);
+                    
+                    // Create flexible column mapping
+                    const findColumnIndex = (possibleNames) => {
+                        for (let i = 0; i < headers.length; i++) {
+                            const header = headers[i].toLowerCase().replace(/[^a-z0-9]/g, '');
+                            for (const name of possibleNames) {
+                                const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+                                if (header === cleanName || header.includes(cleanName) || cleanName.includes(header)) {
+                                    return i;
+                                }
+                            }
+                        }
+                        return -1;
+                    };
+                    
+                    const columnMap = {
+                        firstName: findColumnIndex(['firstname', 'first_name', 'FirstName', 'First_Name', 'first', 'givenname']),
+                        lastName: findColumnIndex(['lastname', 'last_name', 'LastName', 'Last_Name', 'last', 'surname', 'familyname']),
+                        shield: findColumnIndex(['shield', 'Shield', 'SHIELD', 'badge']),
+                        reference: findColumnIndex(['reference', 'Reference', 'REFERENCE', 'ref', 'Ref', 'REF', 'ref_number', 'RefNumber', 'Ref_Number']),
+                        dob: findColumnIndex(['dob', 'DOB', 'Dob', 'date_of_birth', 'DateOfBirth', 'Date_Of_Birth', 'birthdate']),
+                        function: findColumnIndex(['function', 'Function', 'FUNCTION']),
+                        tour: findColumnIndex(['tour', 'Tour', 'TOUR']),
+                        platoon: findColumnIndex(['platoon', 'Platoon', 'PLATOON', 'plt', 'Plt', 'PLT']),
+                        startTime: findColumnIndex(['start_time', 'starttime', 'StartTime', 'Start_Time', 'start', 'Start']),
+                        station: findColumnIndex(['station', 'Station', 'STATION', 'station_name', 'StationName', 'Station_Name', 'house']),
+                        unit: findColumnIndex(['unit', 'Unit', 'UNIT', 'unit_name', 'UnitName', 'Unit_Name', 'unit_number', 'UnitNumber', 'Unit_Number']),
+                        vax: findColumnIndex(['vax', 'Vax', 'VAX', 'vax#', 'Vax#', 'VAX#', 'vax_number', 'VaxNumber', 'Vax_Number', 'vaccination']),
+                        approvedPositions: findColumnIndex(['approved_positions', 'ApprovedPositions', 'Approved_Positions', 'approved', 'positions']),
+                        status: findColumnIndex(['status', 'Status', 'STATUS', 'employment_status', 'EmploymentStatus']),
+                        email: findColumnIndex(['email', 'Email', 'EMAIL', 'email_address', 'EmailAddress']),
+                        phone: findColumnIndex(['phone', 'Phone', 'PHONE', 'phone_number', 'PhoneNumber', 'work_phone']),
+                        oda: findColumnIndex(['oda', 'ODA', 'Oda']),
+                        notes: findColumnIndex(['notes', 'Notes', 'NOTES', 'comments', 'Comments'])
+                    };
+                    
+                    console.log('📋 Column mapping:', columnMap);
+                    console.log('📋 First data line:', lines[1]);
+                    
+                    const importedMembers = [];
+                    for (let i = 1; i < lines.length; i++) {
+                        if (!lines[i].trim()) continue;
+                        
+                        const values = lines[i].split(delimiter).map(v => v.trim().replace(/^"|"$/g, ''));
+                        
+                        // Map values using flexible column mapping
+                        const status = columnMap.status >= 0 ? values[columnMap.status] || 'ACTIVE' : 'ACTIVE';
+                        const member = {
+                            first_name: columnMap.firstName >= 0 ? values[columnMap.firstName] || '' : '',
+                            last_name: columnMap.lastName >= 0 ? values[columnMap.lastName] || '' : '',
+                            shield: columnMap.shield >= 0 ? values[columnMap.shield] || '' : '',
+                            reference: columnMap.reference >= 0 ? values[columnMap.reference] || '' : '',
+                            dob: columnMap.dob >= 0 ? values[columnMap.dob] || '' : '',
+                            function: columnMap.function >= 0 ? values[columnMap.function] || '' : '',
+                            tour: columnMap.tour >= 0 ? values[columnMap.tour] || '' : '',
+                            platoon: columnMap.platoon >= 0 ? values[columnMap.platoon] || '' : '',
+                            start_time: columnMap.startTime >= 0 ? values[columnMap.startTime] || '' : '',
+                            station: columnMap.station >= 0 ? values[columnMap.station] || '' : '',
+                            unit: columnMap.unit >= 0 ? values[columnMap.unit] || '' : '',
+                            vax: columnMap.vax >= 0 ? values[columnMap.vax] || '' : '',
+                            approved_positions: columnMap.approvedPositions >= 0 ? values[columnMap.approvedPositions] || '' : '',
+                            status: status,
+                            email: columnMap.email >= 0 ? values[columnMap.email] || '' : '',
+                            phone: columnMap.phone >= 0 ? values[columnMap.phone] || '' : '',
+                            oda: columnMap.oda >= 0 ? values[columnMap.oda] || '' : '',
+                            notes: columnMap.notes >= 0 ? values[columnMap.notes] || '' : '',
+                            is_active: status.toUpperCase() === 'ACTIVE' // Set is_active based on status
+                        };
+                        
+                        importedMembers.push(member);
+                    }
+                    
+                    console.log('📋 Total members parsed from CSV:', importedMembers.length);
+                    console.log('📋 First member:', importedMembers[0]);
+                    
+                    if (importedMembers.length === 0) {
+                        hideProgress();
+                        showToast('No valid data found in CSV file', 'error');
+                        return;
+                    }
+                    
+                    // Show progress for CSV import
+                    showProgress(`Importing ${importedMembers.length} members from CSV...`);
+                    
+                    // Save all imported members in batches for better performance
+                    const batchSize = 10;
+                    let processed = 0;
+                    let successCount = 0;
+                    let errorCount = 0;
+                    
+                    for (let i = 0; i < importedMembers.length; i += batchSize) {
+                        const batch = importedMembers.slice(i, i + batchSize);
+                        
+                        // Process batch with error handling for each member
+                        const batchResults = await Promise.allSettled(
+                            batch.map(async member => {
+                                try {
+                                    await saveMemberToCloud(member);
+                                    return { success: true, member };
+                                } catch (error) {
+                                    console.error(`Error saving member ${member.first_name} ${member.last_name}:`, error);
+                                    // Save locally if cloud fails
+                                    saveMemberToLocal(member);
+                                    return { success: false, member, error };
+                                }
+                            })
+                        );
+                        
+                        // Count results
+                        batchResults.forEach(result => {
+                            if (result.status === 'fulfilled') {
+                                if (result.value.success) {
+                                    successCount++;
+                                } else {
+                                    errorCount++;
+                                }
+                            } else {
+                                errorCount++;
+                            }
+                        });
+                        
+                        processed += batch.length;
+                        const percentage = Math.round((processed / importedMembers.length) * 100);
+                        updateProgress(percentage, `Processed ${processed}/${importedMembers.length} members...`);
+                    }
+                    
+                    hideProgress();
+                    document.getElementById('import-modal').classList.remove('show');
+                    
+                    // Show appropriate success/warning message based on results
+                    if (errorCount === 0) {
+                        showToast(`✅ Successfully imported ${successCount} members to cloud`, 'success');
+                    } else if (successCount > 0) {
+                        showToast(`⚠️ Imported ${successCount} to cloud, ${errorCount} saved locally only`, 'info');
+                    } else {
+                        showToast(`📋 Imported ${importedMembers.length} members locally (cloud sync unavailable)`, 'info');
+                    }
+                    
+                    loadMembersFromLocal(); // Refresh the display
+                    
+                } catch (error) {
+                    console.error('Import error:', error);
+                    hideProgress();
+                    showToast('Failed to import CSV: ' + error.message, 'error');
+                }
+            };
+            
+            reader.readAsText(file);
+        }
+        
+        // ==========================================
+        // ONBOARDING WIZARD
+        // ==========================================
+        
+        function nextOnboardingStep(step) {
+            document.querySelectorAll('.onboarding-step').forEach(s => s.style.display = 'none');
+            document.getElementById(`onboarding-step-${step}`).style.display = 'block';
+        }
+        
+        async function completeOnboarding() {
+            const fullname = document.getElementById('onboard-fullname').value.trim();
+            const shield = document.getElementById('onboard-shield').value.trim();
+            const func = document.getElementById('onboard-function').value;
+            const platoon = document.getElementById('onboard-platoon').value;
+            const email = document.getElementById('onboard-email').value.trim();
+            const phone = document.getElementById('onboard-phone').value.trim();
+            
+            if (!fullname || !shield || !func) {
+                showToast('Please fill in required fields', 'error');
+                return;
+            }
+            
+            const [firstName, ...lastNameParts] = fullname.split(' ');
+            const lastName = lastNameParts.join(' ');
+            
+            const member = {
+                first_name: firstName,
+                last_name: lastName,
+                shield: shield,
+                function: func,
+                platoon: platoon,
+                email: email,
+                phone: phone,
+                is_active: true,
+                created_at: new Date().toISOString()
+            };
+            
+            await saveMemberToCloud(member);
+            
+            document.getElementById('onboarding-modal').classList.remove('show');
+            showToast('Member onboarded successfully!', 'success');
+            
+            // Reset wizard
+            document.getElementById('onboard-fullname').value = '';
+            document.getElementById('onboard-shield').value = '';
+            document.getElementById('onboard-function').value = '';
+            document.getElementById('onboard-platoon').value = '';
+            document.getElementById('onboard-email').value = '';
+            document.getElementById('onboard-phone').value = '';
+            nextOnboardingStep(1);
+        }
+        
+        // ==========================================
+        // HEADER FUNCTIONALITY
+        // ==========================================
+        
+        function initializeHeader() {
+            const headerToggleBtn = document.getElementById('header-toggle-btn');
+            const header = document.getElementById('header');
+            const clockCollapsed = document.getElementById('clock-collapsed');
+            
+            if (headerToggleBtn && header) {
+                // Load saved state from localStorage
+                const headerCollapsed = localStorage.getItem('adminHeaderCollapsed') === 'true';
+                if (headerCollapsed) {
+                    header.classList.add('collapsed');
+                }
+                
+                headerToggleBtn.addEventListener('click', () => {
+                    header.classList.toggle('collapsed');
+                    const isCollapsed = header.classList.contains('collapsed');
+                    localStorage.setItem('adminHeaderCollapsed', isCollapsed);
+                });
+                
+                // Clock update function
+                function updateClock() {
+                    const now = new Date();
+                    const timeString = now.toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: true 
+                    });
+                    const dateString = now.toLocaleDateString([], { 
+                        weekday: 'short', 
+                        month: 'short', 
+                        day: 'numeric' 
+                    });
+                    
+                    const fullTimeString = `${timeString} • ${dateString}`;
+                    
+                    if (clockCollapsed) {
+                        clockCollapsed.textContent = fullTimeString;
+                    }
+                }
+                
+                // Initial clock update and set interval
+                updateClock();
+                setInterval(updateClock, 1000);
+                
+                // Initialize DOB privacy controls
+                initializeDOBPrivacy();
+            }
+        }
+        
+        // DOB Privacy Functionality
+        let isDOBVisible = false;
+        
+        function initializeDOBPrivacy() {
+            const privacyCodeInput = document.getElementById('privacy-code-input');
+            const privacyCodeBtn = document.getElementById('privacy-code-btn');
+            
+            // Apply initial privacy state
+            applyDOBPrivacy();
+            
+            function checkPrivacyCode() {
+                const code = privacyCodeInput.value.trim();
+                if (code === '1776') {
+                    isDOBVisible = true;
+                    privacyCodeInput.value = '';
+                    privacyCodeInput.placeholder = 'DOB Unlocked ✓';
+                    privacyCodeBtn.textContent = 'Lock';
+                    privacyCodeBtn.style.background = 'rgba(46, 125, 50, 0.3)';
+                    showToast('🔓 DOB information unlocked', 'success');
+                } else if (code !== '') {
+                    showToast('❌ Invalid privacy code', 'error');
+                    privacyCodeInput.value = '';
+                } else {
+                    isDOBVisible = false;
+                    privacyCodeInput.placeholder = 'Enter code to show DOB';
+                    privacyCodeBtn.textContent = 'Unlock';
+                    privacyCodeBtn.style.background = 'rgba(255,255,255,0.2)';
+                    showToast('🔒 DOB information locked', 'info');
+                }
+                applyDOBPrivacy();
+            }
+            
+            privacyCodeBtn.addEventListener('click', () => {
+                if (isDOBVisible) {
+                    // Lock the DOB
+                    isDOBVisible = false;
+                    privacyCodeInput.value = '';
+                    checkPrivacyCode();
+                } else {
+                    checkPrivacyCode();
+                }
+            });
+            
+            privacyCodeInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    checkPrivacyCode();
+                }
+            });
+        }
+        
+        function applyDOBPrivacy() {
+            const memberGrid = document.getElementById('member-grid');
+            if (isDOBVisible) {
+                memberGrid.classList.remove('dob-hidden');
+                // Show real DOB, hide protected message
+                document.querySelectorAll('.dob-info').forEach(el => el.style.display = 'flex');
+                document.querySelectorAll('.dob-protected').forEach(el => el.style.display = 'none');
+            } else {
+                memberGrid.classList.add('dob-hidden');
+                // Hide real DOB, show protected message
+                document.querySelectorAll('.dob-info').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.dob-protected').forEach(el => el.style.display = 'flex');
+            }
+        }
+        
+        function showToast(message, type = 'info') {
+            // Remove any existing toast
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+            
+            // Create new toast
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            // Show toast
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            // Hide and remove toast
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // ==========================================
+        // MOBILE ACTION BAR FUNCTIONALITY
+        // ==========================================
+        
+        function initializeMobileActionBar() {
+            const mobileActionBar = document.getElementById('mobile-action-bar');
+            const mobileBarIndicator = document.getElementById('mobile-bar-indicator');
+            if (!mobileActionBar) return;
+            
+            // Auto-hide functionality variables
+            let scrollTimeout;
+            let lastScrollY = window.scrollY;
+            let isBarHidden = false;
+
+            function showMobileBar() {
+                if (mobileActionBar) {
+                    mobileActionBar.classList.remove('hidden');
+                    mobileActionBar.classList.add('visible');
+                    isBarHidden = false;
+                }
+                if (mobileBarIndicator) {
+                    mobileBarIndicator.classList.remove('show');
+                }
+            }
+
+            function hideMobileBar() {
+                if (mobileActionBar) {
+                    mobileActionBar.classList.add('hidden');
+                    mobileActionBar.classList.remove('visible');
+                    isBarHidden = true;
+                }
+                if (mobileBarIndicator) {
+                    mobileBarIndicator.classList.add('show');
+                }
+            }
+
+            function handleScroll() {
+                const currentScrollY = window.scrollY;
+                const scrollDirection = currentScrollY > lastScrollY ? 'down' : 'up';
+                
+                // Don't hide if we're near the top or bottom of the page
+                const nearTop = currentScrollY < 100;
+                const nearBottom = (window.innerHeight + currentScrollY) >= (document.body.offsetHeight - 100);
+                
+                if (nearTop || nearBottom) {
+                    if (isBarHidden) {
+                        showMobileBar();
+                    }
+                } else if (scrollDirection === 'down' && !isBarHidden) {
+                    // Hide bar when scrolling down (away from top)
+                    hideMobileBar();
+                } else if (scrollDirection === 'up' && isBarHidden) {
+                    // Show bar when scrolling up
+                    showMobileBar();
+                }
+
+                lastScrollY = currentScrollY;
+
+                // Auto-show bar after user stops scrolling for 3 seconds
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    if (isBarHidden) {
+                        showMobileBar();
+                    }
+                }, 3000);
+            }
+
+            // Add scroll event listener
+            window.addEventListener('scroll', handleScroll, { passive: true });
+
+            // Add click handler for the indicator to show the bar
+            if (mobileBarIndicator) {
+                mobileBarIndicator.addEventListener('click', () => {
+                    showMobileBar();
+                });
+            }
+
+            // Initialize with visible state
+            if (mobileActionBar) {
+                mobileActionBar.classList.add('visible');
+            }
+            
+            const actionHandlers = {
+                add: () => openAddMemberModal(),
+                sync: () => loadMembersFromCloud(),
+                export: () => exportToCSV(),
+                more: () => showMoreActionsModal()
+            };
+            
+            mobileActionBar.addEventListener('click', (event) => {
+                const button = event.target.closest('.mobile-action-btn');
+                if (!button) return;
+                
+                const action = button.dataset.action;
+                const handler = actionHandlers[action];
+                
+                if (typeof handler === 'function') {
+                    // Visual feedback
+                    document.querySelectorAll('.mobile-action-btn').forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    // Execute action
+                    handler();
+                    
+                    // Remove active state after delay
+                    setTimeout(() => button.classList.remove('active'), 300);
+                }
+            });
+
+            // Add touch handler for bottom screen area to show bar
+            let touchStartY = 0;
+            document.addEventListener('touchstart', (e) => {
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+
+            document.addEventListener('touchend', (e) => {
+                const touchEndY = e.changedTouches[0].clientY;
+                const screenHeight = window.innerHeight;
+                const bottomThreshold = screenHeight - 80; // Bottom 80px of screen
+                
+                // If touch started and ended in bottom area and bar is hidden, show it
+                if (touchStartY > bottomThreshold && touchEndY > bottomThreshold && isBarHidden) {
+                    showMobileBar();
+                }
+            }, { passive: true });
+
+            // Show bar when user taps anywhere while it's hidden (as a fallback)
+            document.addEventListener('click', (e) => {
+                // Only if the click wasn't on the bar itself or modal content
+                if (isBarHidden && !e.target.closest('#mobile-action-bar') && !e.target.closest('.modal-content')) {
+                    showMobileBar();
+                }
+            });
+        }
+        
+        function showMoreActionsModal() {
+            // Create a simple action sheet for additional options
+            const actions = [
+                { text: '📥 Import File', action: () => document.getElementById('import-modal').classList.add('show') },
+
+                { text: '🎓 Onboarding', action: () => document.getElementById('onboarding-modal').classList.add('show') },
+                { text: '☁️ Push to Cloud', action: () => pushAllToCloud() },
+                { text: '🧹 Remove Duplicates', action: () => removeDuplicates() },
+                { text: '🗑️ Clear Data', action: () => {
+                    if (confirm('⚠️ DELETE ALL LOCAL DATA?\n\nThis will delete ALL members from your browser storage.\n\nCloud data will NOT be affected.\n\nThis action CANNOT be undone!\n\nAre you absolutely sure?')) {
+                        if (confirm('FINAL WARNING!\n\nClick OK to DELETE ALL LOCAL DATA.')) {
+                            members = [];
+                            localStorage.removeItem('ems_members');
+                            renderMembers();
+                            updateStats();
+                            showToast('🗑️ All local data cleared', 'success');
+                        }
+                    }
+                }}
+            ];
+            
+            const actionSheet = document.createElement('div');
+            actionSheet.className = 'modal show';
+            actionSheet.innerHTML = `
+                <div class="modal-content" style="max-width: 400px;">
+                    <div class="modal-header">
+                        <h2 class="modal-title">More Actions</h2>
+                        <span class="close-btn" onclick="this.closest('.modal').remove()">&times;</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        ${actions.map((action, index) => `
+                            <button class="btn btn-secondary" onclick="
+                                (${action.action.toString()})();
+                                this.closest('.modal').remove();
+                            ">${action.text}</button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(actionSheet);
+        }
+        
+        // ==========================================
+        // EVENT LISTENERS
+        // ==========================================
+        
+        document.getElementById('add-member-btn').addEventListener('click', openAddMemberModal);
+        
+        document.getElementById('sync-now-btn').addEventListener('click', loadMembersFromCloud);
+        
+        document.getElementById('export-csv-btn').addEventListener('click', exportToCSV);
+        
+        document.getElementById('remove-duplicates-btn').addEventListener('click', removeDuplicates);
+        
+        document.getElementById('clear-data-btn').addEventListener('click', () => {
+            if (confirm('⚠️ DELETE ALL LOCAL DATA?\n\nThis will delete ALL members from your browser storage.\n\nCloud data will NOT be affected.\n\nThis action CANNOT be undone!\n\nAre you absolutely sure?')) {
+                if (confirm('FINAL WARNING!\n\nClick OK to DELETE ALL LOCAL DATA.')) {
+                    localStorage.removeItem('ems_members');
+                    members = [];
+                    renderMembers();
+                    updateStats();
+                    showToast('✅ All local data cleared', 'success');
+                }
+            }
+        });
+        
+        document.getElementById('import-csv-btn').addEventListener('click', () => {
+            document.getElementById('import-modal').classList.add('show');
+        });
+        
+        document.getElementById('process-import-btn').addEventListener('click', processFileImport);
+
+        // File type selection handlers
+        document.getElementById('csv-type-btn').addEventListener('click', function() {
+            document.querySelectorAll('.file-type-btn').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById('file-input').accept = '.csv';
+        });
+
+        document.getElementById('excel-type-btn').addEventListener('click', function() {
+            document.querySelectorAll('.file-type-btn').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById('file-input').accept = '.xlsx,.xls';
+        });
+        
+        document.getElementById('onboarding-btn').addEventListener('click', () => {
+            document.getElementById('onboarding-modal').classList.add('show');
+        });
+        
+
+        
+        document.getElementById('push-to-cloud-btn').addEventListener('click', pushAllToCloud);
+        
+        // Search functionality
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            renderMembers();
+        });
+        
+        // Station filter functionality
+        document.getElementById('station-select').addEventListener('change', (e) => {
+            selectedStation = e.target.value;
+            renderMembers();
+            updateStats(); // Update stats to reflect station filter
+            
+            // Update station display in header
+            const stationDisplay = document.getElementById('current-station-name');
+            if (stationDisplay) {
+                stationDisplay.textContent = selectedStation || 'All Stations';
+            }
+            
+            if (selectedStation) {
+                showToast(`📍 Filtering by station: ${selectedStation}`, 'info');
+            } else {
+                showToast(`📍 Showing all stations`, 'info');
+            }
+        });
+        
+        // Unit filter functionality
+        document.getElementById('unit-select').addEventListener('change', (e) => {
+            selectedUnit = e.target.value;
+            renderMembers();
+            updateStats(); // Update stats to reflect unit filter
+            if (selectedUnit) {
+                showToast(`🚑 Filtering by unit: ${selectedUnit}`, 'info');
+            } else {
+                showToast(`🚑 Showing all units`, 'info');
+            }
+        });
+        
+        // Function filter functionality
+        document.getElementById('function-select').addEventListener('change', (e) => {
+            selectedFunction = e.target.value;
+            renderMembers();
+            updateStats(); // Update stats to reflect function filter
+            if (selectedFunction) {
+                showToast(`👤 Filtering by function: ${selectedFunction}`, 'info');
+            } else {
+                showToast(`👤 Showing all functions`, 'info');
+            }
+        });
+        
+        // Filter functionality (All, Active, Inactive)
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', (e) => {
+                document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                e.target.classList.add('active');
+                currentFilter = e.target.dataset.filter;
+                
+                // Clear special status filters when using basic filters
+                if (currentFilter !== 'all') {
+                    activeStatusFilters.clear();
+                    document.querySelectorAll('.status-filter-chip').forEach(c => c.classList.remove('active'));
+                }
+                
+                renderMembers();
+            });
+        });
+
+        // Special Status Filter functionality (Multiple Selection) - Dynamic Handler
+        function handleStatusFilterClick(e) {
+            const status = e.target.dataset.status;
+            
+            // Toggle the status filter
+            if (activeStatusFilters.has(status)) {
+                activeStatusFilters.delete(status);
+                e.target.classList.remove('active');
+            } else {
+                activeStatusFilters.add(status);
+                e.target.classList.add('active');
+            }
+            
+            // If any special status is selected, set filter to 'all' and clear basic filter active states
+            if (activeStatusFilters.size > 0) {
+                currentFilter = 'all';
+                document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                document.querySelector('.filter-chip[data-filter="all"]').classList.add('active');
+            }
+            
+            renderMembers();
+        }
+
+        // Initial setup for dynamic status filters (will be called by updateDynamicStatusFilters)
+        document.querySelectorAll('.status-filter-chip').forEach(chip => {
+            chip.addEventListener('click', handleStatusFilterClick);
+        });
+
+        // Toggle special status card expansion
+        function toggleSpecialStatusCard(card) {
+            // Prevent toggle when clicking on buttons
+            if (event.target.closest('.member-actions') || event.target.closest('button')) {
+                return;
+            }
+            
+            card.classList.toggle('expanded');
+        }
+        
+        // Dark mode toggle
+        document.getElementById('dark-mode-toggle').addEventListener('change', (e) => {
+            if (e.target.checked) {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('dark-mode', 'true');
+            } else {
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem('dark-mode', 'false');
+            }
+        });
+        
+        // Load dark mode preference
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.getElementById('dark-mode-toggle').checked = true;
+            document.body.classList.add('dark-mode');
+        }
+        
+        // Modal close buttons
+        document.getElementById('close-member-modal').addEventListener('click', () => {
+            document.getElementById('member-modal').classList.remove('show');
+        });
+        
+        document.getElementById('cancel-member-btn').addEventListener('click', () => {
+            document.getElementById('member-modal').classList.remove('show');
+        });
+        
+
+        
+        document.getElementById('close-import-modal').addEventListener('click', () => {
+            document.getElementById('import-modal').classList.remove('show');
+        });
+        
+        document.getElementById('cancel-import-btn').addEventListener('click', () => {
+            document.getElementById('import-modal').classList.remove('show');
+        });
+        
+        document.getElementById('close-onboarding-modal').addEventListener('click', () => {
+            document.getElementById('onboarding-modal').classList.remove('show');
+        });
+        
+
+        
+        // Member form submission
+        document.getElementById('member-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const member = {
+                id: document.getElementById('member-id').value || undefined,
+                first_name: document.getElementById('first-name').value.trim(),
+                last_name: document.getElementById('last-name').value.trim(),
+                shield: document.getElementById('shield-number').value.trim(),
+                dob: document.getElementById('dob').value,
+                function: document.getElementById('function').value,
+                tour: document.getElementById('tour').value.trim(),
+                platoon: document.getElementById('platoon').value,
+                start_time: document.getElementById('start-time').value.trim(),
+                station: document.getElementById('station').value.trim(),
+                unit: document.getElementById('unit').value.trim(),
+                vax: document.getElementById('vax-number').value.trim(),
+                approved_positions: document.getElementById('approved-positions').value.trim(),
+                status: document.getElementById('status').value,
+                oda: document.getElementById('oda').value,
+                email: document.getElementById('email').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                notes: document.getElementById('notes').value.trim(),
+                is_active: document.getElementById('is-active').checked,
+                updated_at: new Date().toISOString()
+            };
+            
+            if (!member.id) {
+                member.created_at = new Date().toISOString();
+            }
+            
+            await saveMemberToCloud(member);
+            
+            document.getElementById('member-modal').classList.remove('show');
+            showToast('Member saved successfully', 'success');
+        });
+        
+        // Close modals on outside click
+        window.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('show');
+            }
+        });
+        
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        
+        // Load members on startup
+        loadMembersFromLocal();
+        
+        // Auto-sync from cloud if available
+        if (supabase) {
+            loadMembersFromCloud();
+        }
+        
+        // Scroll to Top Button
+        const scrollBtn = document.createElement('button');
+        scrollBtn.id = 'scroll-to-top';
+        scrollBtn.innerHTML = '↑';
+        scrollBtn.title = 'Back to top';
+        document.body.appendChild(scrollBtn);
+
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                scrollBtn.classList.add('show');
+            } else {
+                scrollBtn.classList.remove('show');
+            }
+        });
+
+        scrollBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+        
+        // Initialize header toggle and clock
+        initializeHeader();
+        
+        // Initialize mobile action bar
+        initializeMobileActionBar();
+        
+        console.log('EMS Member Admin App Initialized');
+        console.log('Configure Supabase credentials to enable cloud sync');
+    </script>
+</body>
+</html>
