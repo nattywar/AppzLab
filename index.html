@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AppzLab - Host HTML apps locally without a server">
+    <meta name="theme-color" content="#C8102E">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>AppzLab - Your Local App Launcher</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <style>
+        :root {
+            --primary-color: #C8102E;
+            --secondary-color: #003478;
+            --accent-color: #FFB81C;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-color: #1a1a1a;
+            --text-secondary: #666;
+            --border-color: #e0e0e0;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.15);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, var(--bg-color) 0%, #e8eef3 100%);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            margin-bottom: 40px;
+            border-top: 4px solid var(--primary-color);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .tagline {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .quick-info {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary-color), #a00d26);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            color: var(--secondary-color);
+            margin: 40px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid var(--accent-color);
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .app-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            overflow: hidden;
+            border: 2px solid transparent;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--primary-color);
+        }
+
+        .app-icon {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+
+        .app-content {
+            padding: 20px;
+            flex: 1;
+        }
+
+        .app-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--secondary-color);
+        }
+
+        .app-description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+        }
+
+        .app-meta {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: auto;
+        }
+
+        .app-tag {
+            background: #f0f0f0;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .add-app-section {
+            background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+            border-radius: 12px;
+            padding: 30px;
+            margin: 40px 0;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .add-app-section h3 {
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+
+        .add-app-section ol {
+            margin-left: 20px;
+            line-height: 2;
+        }
+
+        .add-app-section li {
+            color: var(--text-color);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border-top: 3px solid var(--primary-color);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--secondary-color);
+        }
+
+        .feature-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 30px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            color: var(--text-secondary);
+        }
+
+        .footer-links {
+            margin-top: 15px;
+        }
+
+        .footer-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            margin: 0 15px;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .apps-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-state-text {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 AppzLab</h1>
+            <p class="tagline">Your Local HTML App Launcher - No Server Required</p>
+            <div class="quick-info">✨ Drag & Drop HTML files into the apps folder to get started</div>
+        </header>
+
+        <!-- Features Section -->
+        <section>
+            <h2 class="section-title">Why AppzLab?</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🚫</div>
+                    <div class="feature-title">No Server Required</div>
+                    <div class="feature-description">Run HTML apps directly from your file system. Just open index.html in your browser!</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <div class="feature-title">Install to Home Screen</div>
+                    <div class="feature-description">Add AppzLab to your home screen on mobile or desktop for quick access like a native app.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔌</div>
+                    <div class="feature-title">100% Offline</div>
+                    <div class="feature-description">Works completely offline (except for apps requiring external APIs).</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-title">Super Simple</div>
+                    <div class="feature-description">Just copy HTML files into the apps folder. That's it!</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Apps Section -->
+        <section>
+            <h2 class="section-title">Available Apps</h2>
+            <div id="apps-container" class="apps-grid">
+                <div class="loading">🔍 Scanning for apps...</div>
+            </div>
+        </section>
+
+        <!-- How to Add Apps -->
+        <section class="add-app-section">
+            <h3>📝 How to Add Your Own Apps</h3>
+            <ol>
+                <li><strong>Copy</strong> your HTML file into the <code>apps/</code> folder</li>
+                <li><strong>Refresh</strong> this page in your browser</li>
+                <li><strong>Click</strong> on your app to open it!</li>
+            </ol>
+            <p style="margin-top: 15px; color: var(--text-secondary);">
+                💡 <strong>Tip:</strong> You can also place HTML files in the root folder or FDNY-EMS-Staffing folder - they'll all be detected automatically!
+            </p>
+        </section>
+
+        <footer>
+            <p><strong>AppzLab</strong> - Simple Local App Hosting</p>
+            <p style="margin-top: 10px;">Made with ❤️ for easy local development</p>
+            <div class="footer-links">
+                <a href="README.md">Documentation</a>
+                <a href="https://github.com/nattywar/AppzLab" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // App catalog - hardcoded apps plus auto-discovery
+        const knownApps = [
+            {
+                title: "Example App Template",
+                description: "A simple template showing how to create your own HTML apps. Great starting point!",
+                path: "apps/example-app.html",
+                icon: "📄",
+                tags: ["Template", "Example", "Tutorial"]
+            },
+            {
+                title: "FDNY EMS Staffing System",
+                description: "Full-featured EMS staffing management and scheduling system with FDNY branding",
+                path: "FDNY-EMS-Staffing/FDNY_EMS_Staffing_System_Enhanced.html",
+                icon: "🚨",
+                tags: ["Staffing", "FDNY", "Management"]
+            },
+            {
+                title: "FDNY EMS Staffing Enhanced",
+                description: "Enhanced version of the FDNY EMS Staffing System",
+                path: "FDNY_EMS_Staffing_System_Enhanced (1).html",
+                icon: "🚑",
+                tags: ["Staffing", "FDNY", "Enhanced"]
+            },
+            {
+                title: "Mobile Staff Manager",
+                description: "Mobile-optimized staff management interface",
+                path: "MOBILE_STAFF - Copy (1).html",
+                icon: "📱",
+                tags: ["Mobile", "Staff"]
+            },
+            {
+                title: "Member Admin",
+                description: "Member administration and management system",
+                path: "MEMBER_ADMIN_X - Copy.html",
+                icon: "👥",
+                tags: ["Admin", "Members"]
+            }
+        ];
+
+        // Auto-discover apps in the apps folder
+        const autoDiscoveredApps = [];
+
+        // Icons for different file types
+        const iconMap = {
+            'staff': '📋',
+            'admin': '⚙️',
+            'mobile': '📱',
+            'schedule': '📅',
+            'report': '📊',
+            'dashboard': '📈',
+            'default': '📄'
+        };
+
+        function getIconForApp(filename) {
+            const lower = filename.toLowerCase();
+            for (const [key, icon] of Object.entries(iconMap)) {
+                if (lower.includes(key)) return icon;
+            }
+            return iconMap.default;
+        }
+
+        function getTitleFromFilename(filename) {
+            // Remove extension and clean up
+            let title = filename.replace(/\.(html|htm)$/i, '');
+            // Replace underscores and hyphens with spaces
+            title = title.replace(/[_-]/g, ' ');
+            // Capitalize words
+            title = title.replace(/\b\w/g, c => c.toUpperCase());
+            return title;
+        }
+
+        function renderApps() {
+            const container = document.getElementById('apps-container');
+            const allApps = [...knownApps, ...autoDiscoveredApps];
+
+            if (allApps.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <div class="empty-state-icon">📂</div>
+                        <div class="empty-state-text">
+                            No apps found yet! Add HTML files to the <strong>apps/</strong> folder to get started.
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = allApps.map(app => `
+                <a href="${app.path}" class="app-card">
+                    <div class="app-icon">${app.icon}</div>
+                    <div class="app-content">
+                        <div class="app-title">${app.title}</div>
+                        <div class="app-description">${app.description}</div>
+                        <div class="app-meta">
+                            ${app.tags ? app.tags.map(tag => `<span class="app-tag">${tag}</span>`).join('') : ''}
+                        </div>
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        // Initialize the app
+        function init() {
+            // Note: We cannot automatically scan the filesystem from a static HTML file
+            // for security reasons. Users need to manually add apps to the knownApps array
+            // or we provide a server-based solution
+            renderApps();
+
+            // Add install prompt for PWA
+            let deferredPrompt;
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                // Show install button or prompt
+                console.log('PWA install prompt available');
+            });
+        }
+
+        // Run on page load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
