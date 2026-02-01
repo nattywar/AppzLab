@@ -22,8 +22,8 @@ Welcome to AppzLab! This repository provides a simple way to host and access HTM
 AppzLab/
 ├── index.html          # Main launcher page (open this file)
 ├── apps/               # Place your HTML files here
-│   ├── example.html    # Example app
-│   └── [your-app.html] # Your custom HTML files
+│   ├── example-app.html    # Example app template
+│   └── [your-app.html]     # Your custom HTML files
 ├── FDNY-EMS-Staffing/  # FDNY EMS Staffing System
 └── README.md           # This file
 ```
